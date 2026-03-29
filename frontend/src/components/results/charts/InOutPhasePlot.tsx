@@ -1,4 +1,4 @@
-import Plot from "react-plotly.js";
+import Plot from "./Plot";
 import type { PlotData } from "../../../schemas/results";
 
 interface InOutPhasePlotProps {
@@ -43,12 +43,12 @@ export function InOutPhasePlot({ data }: InOutPhasePlotProps) {
         },
       ]}
       layout={{
-        title: { text: "In-Phase / Out-of-Phase Signal", font: { size: 14 } },
-        xaxis: { title: "Frequency (Hz)", type: "log" },
-        yaxis: { title: "Signal (V)" },
+        title: { text: "In-Phase / Out-of-Phase Signal" },
+        xaxis: { title: { text: "Frequency (Hz)" }, type: "log" },
+        yaxis: { title: { text: "Signal (V)" } },
         paper_bgcolor: "transparent",
         plot_bgcolor: "rgba(30,30,30,0.8)",
-        font: { color: "#d1d5db" },
+        font: { color: "#d1d5db", size: 12 },
         legend: { x: 0.01, y: 0.99 },
         margin: { l: 60, r: 20, t: 40, b: 50 },
         autosize: true,

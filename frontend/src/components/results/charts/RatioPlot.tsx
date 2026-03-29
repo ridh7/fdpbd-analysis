@@ -1,4 +1,4 @@
-import Plot from "react-plotly.js";
+import Plot from "./Plot";
 import type { PlotData } from "../../../schemas/results";
 
 interface RatioPlotProps {
@@ -27,15 +27,12 @@ export function RatioPlot({ data }: RatioPlotProps) {
         },
       ]}
       layout={{
-        title: {
-          text: "-V_in / V_out Ratio",
-          font: { size: 14 },
-        },
-        xaxis: { title: "Frequency (Hz)", type: "log" },
-        yaxis: { title: "Ratio" },
+        title: { text: "-V_in / V_out Ratio" },
+        xaxis: { title: { text: "Frequency (Hz)" }, type: "log" },
+        yaxis: { title: { text: "Ratio" } },
         paper_bgcolor: "transparent",
         plot_bgcolor: "rgba(30,30,30,0.8)",
-        font: { color: "#d1d5db" },
+        font: { color: "#d1d5db", size: 12 },
         legend: { x: 0.01, y: 0.99 },
         margin: { l: 60, r: 20, t: 40, b: 50 },
         autosize: true,
