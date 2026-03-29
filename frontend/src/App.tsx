@@ -1,12 +1,156 @@
+import { useReducer } from "react";
+import { formReducer, initialFormState } from "./state/formReducer";
+import { useAnalysis } from "./hooks/useAnalysis";
+import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
+import { AppHeader } from "./components/layout/AppHeader";
+import { FileUpload } from "./components/form/FileUpload";
+import { ForwardModelForm } from "./components/form/ForwardModelForm";
+import { ActionBar } from "./components/form/ActionBar";
+import { ResultsSummary } from "./components/results/ResultsSummary";
+import { PlotPanel } from "./components/results/PlotPanel";
+import type { IsotropicParams } from "./schemas/params";
+
 function App() {
+  const [form, dispatch] = useReducer(formReducer, initialFormState);
+  const analysis = useAnalysis();
+
+  const isFormValid = () => {
+    const p = form.params;
+    const scalars = [
+      p.f_rolloff,
+      p.delay_1,
+      p.delay_2,
+      p.niu,
+      p.alpha_t,
+      p.lambda_up,
+      p.eta_up,
+      p.c_up,
+      p.h_up,
+      p.w_rms,
+      p.x_offset,
+      p.incident_pump,
+      p.incident_probe,
+      p.n_al,
+      p.k_al,
+      p.lens_transmittance,
+      p.detector_factor,
+    ];
+    return (
+      scalars.every(isValidDecimal) &&
+      areAllValidDecimals([...p.lambda_down]) &&
+      areAllValidDecimals([...p.eta_down]) &&
+      areAllValidDecimals([...p.c_down]) &&
+      areAllValidDecimals([...p.h_down]) &&
+      form.file !== null
+    );
+  };
+
+  const handleRun = () => {
+    if (form.file) {
+      analysis.runAnalysis(form.params, form.file);
+    }
+  };
+
+  const handleClear = () => {
+    dispatch({ type: "CLEAR" });
+    analysis.reset();
+  };
+
+  const handleFieldChange = (field: keyof IsotropicParams, value: string) => {
+    dispatch({ type: "SET_FIELD", field, value });
+  };
+
+  const handleArrayFieldChange = (
+    field: "lambda_down" | "eta_down" | "c_down" | "h_down",
+    index: number,
+    value: string,
+  ) => {
+    dispatch({ type: "SET_ARRAY_FIELD", field, index, value });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gray-900 text-white">
-      <header className="bg-gray-800 p-4">
-        <h1 className="text-xl font-semibold">FD-PBD Thermal Analysis</h1>
-      </header>
-      <main className="flex flex-1 items-center justify-center">
-        <p className="text-gray-400">Phase 0 scaffold complete.</p>
-      </main>
+      <AppHeader />
+
+      <div className="flex min-h-0 flex-1">
+        {/* Left panel: Input form */}
+        <div className="flex w-1/3 min-w-80 flex-col border-r border-gray-700">
+          <div className="border-b border-gray-700 p-3">
+            <FileUpload
+              file={form.file}
+              onFileChange={(file) => dispatch({ type: "SET_FILE", file })}
+              disabled={analysis.isProcessing}
+            />
+          </div>
+
+          <ForwardModelForm
+            params={form.params}
+            lensOption={form.lensOption}
+            mediumOption={form.mediumOption}
+            laserOption={form.laserOption}
+            collapsedSections={form.collapsedSections}
+            onFieldChange={handleFieldChange}
+            onArrayFieldChange={handleArrayFieldChange}
+            onLensChange={(opt) =>
+              dispatch({ type: "SET_LENS_OPTION", option: opt })
+            }
+            onMediumChange={(opt) =>
+              dispatch({ type: "SET_MEDIUM_OPTION", option: opt })
+            }
+            onLaserChange={(opt) =>
+              dispatch({ type: "SET_LASER_OPTION", option: opt })
+            }
+            onToggleSection={(s) =>
+              dispatch({ type: "TOGGLE_SECTION", section: s })
+            }
+            disabled={analysis.isProcessing}
+          />
+
+          <ActionBar
+            onRun={handleRun}
+            onClear={handleClear}
+            isProcessing={analysis.isProcessing}
+            isValid={isFormValid()}
+          />
+        </div>
+
+        {/* Right panel: Results */}
+        <div className="flex flex-1 flex-col overflow-y-auto p-4">
+          {analysis.status && (
+            <div
+              className={`mb-4 rounded px-3 py-2 text-sm ${
+                analysis.error
+                  ? "bg-red-900/50 text-red-300"
+                  : analysis.isProcessing
+                    ? "bg-blue-900/50 text-blue-300"
+                    : "bg-green-900/50 text-green-300"
+              }`}
+            >
+              {analysis.status}
+            </div>
+          )}
+
+          {analysis.result && (
+            <>
+              <ResultsSummary
+                result={analysis.result}
+                timeTaken={analysis.timeTaken}
+              />
+              <div className="mt-4 min-h-0 flex-1">
+                <PlotPanel data={analysis.result.plot_data} />
+              </div>
+            </>
+          )}
+
+          {!analysis.result && !analysis.isProcessing && (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-gray-500">
+                Upload a data file and click "Run Analysis" to see results.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

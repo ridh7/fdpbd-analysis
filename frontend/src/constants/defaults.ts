@@ -1,0 +1,25 @@
+import type { IsotropicParams } from "../schemas/params";
+
+export const ISOTROPIC_DEFAULTS: IsotropicParams = {
+  f_rolloff: "95000",
+  delay_1: "0.0000089",
+  delay_2: "-1.3e-11",
+  incident_pump: "1.06",
+  incident_probe: "0.85",
+  w_rms: "11.20",
+  x_offset: "12.60",
+  lens_transmittance: "0.93",
+  detector_factor: "74.0",
+  n_al: "2.9",
+  k_al: "8.2",
+  lambda_down: ["149.0", "0.1", "9.7"],
+  eta_down: ["1.0", "1.0", "1.0"],
+  c_down: ["2.44", "0.1", "2.73"],
+  h_down: ["0.07", "0.001", "1"],
+  niu: "0.26",
+  alpha_t: "0.00001885",
+  lambda_up: "0.028",
+  eta_up: "1.0",
+  c_up: "1192.0",
+  h_up: "0.001",
+};
