@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"cd backend && .venv/bin/python -m uvicorn main:app --reload --port 8000\" \"cd frontend && pnpm dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
