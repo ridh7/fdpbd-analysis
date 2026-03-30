@@ -75,3 +75,44 @@ export const TRANSVERSE_EXTRA_DEFAULTS: TransverseExtra = {
   c_probe: "0.65",
   g_int: "100e6",
 };
+
+// DE fitting configuration
+export interface FittableParam {
+  key: string;
+  label: string;
+  defaultMin: string;
+  defaultMax: string;
+}
+
+export const ANISO_FITTABLE_PARAMS: FittableParam[] = [
+  { key: "sigma_x", label: "sigma_x (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  { key: "sigma_y", label: "sigma_y (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  { key: "alphaT_perp", label: "CTE perp (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+  { key: "alphaT_para", label: "CTE para (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+];
+
+export const TRANS_FITTABLE_PARAMS: FittableParam[] = [
+  { key: "sigma_r", label: "sigma_r (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  { key: "alphaT_perp", label: "CTE perp (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+  { key: "alphaT_para", label: "CTE para (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+];
+
+export interface FitConfigState {
+  parameterToFit: string;
+  boundsMin: string;
+  boundsMax: string;
+  maxIterations: string;
+  populationSize: string;
+  tolerance: string;
+}
+
+export const DEFAULT_FIT_CONFIG: FitConfigState = {
+  parameterToFit: "sigma_x",
+  boundsMin: "0.01",
+  boundsMax: "2.0",
+  maxIterations: "20",
+  populationSize: "8",
+  tolerance: "1e-3",
+};

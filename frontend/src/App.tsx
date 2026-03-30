@@ -1,14 +1,24 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { formReducer, initialFormState } from "./state/formReducer";
 import { useAnalysis } from "./hooks/useAnalysis";
+import { useFitting } from "./hooks/useFitting";
 import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
 import { AppHeader } from "./components/layout/AppHeader";
 import { FileUpload } from "./components/form/FileUpload";
 import { AnalysisModeSelector } from "./components/form/AnalysisModeSelector";
 import { ForwardModelForm } from "./components/form/ForwardModelForm";
+import { TabBar, type WorkflowTab } from "./components/form/TabBar";
+import { FitConfigForm } from "./components/form/FitConfigForm";
 import { ActionBar } from "./components/form/ActionBar";
 import { ResultsSummary } from "./components/results/ResultsSummary";
 import { PlotPanel } from "./components/results/PlotPanel";
+import { FittingProgress } from "./components/results/FittingProgress";
+import {
+  ANISO_FITTABLE_PARAMS,
+  TRANS_FITTABLE_PARAMS,
+  DEFAULT_FIT_CONFIG,
+} from "./constants/defaults";
+import type { FitConfigState } from "./constants/defaults";
 import type {
   IsotropicParams,
   AnisotropicExtra,
@@ -18,6 +28,24 @@ import type {
 function App() {
   const [form, dispatch] = useReducer(formReducer, initialFormState);
   const analysis = useAnalysis();
+  const fitting = useFitting();
+  const [activeTab, setActiveTab] = useState<WorkflowTab>("forward");
+  const [fitConfig, setFitConfig] = useState<FitConfigState>(DEFAULT_FIT_CONFIG);
+
+  const fittingEnabled =
+    form.analysisMode === "anisotropic" ||
+    form.analysisMode === "transverse_isotropic";
+  const fittableParams =
+    form.analysisMode === "transverse_isotropic"
+      ? TRANS_FITTABLE_PARAMS
+      : ANISO_FITTABLE_PARAMS;
+
+  const handleFitConfigChange = (
+    field: keyof FitConfigState,
+    value: string,
+  ) => {
+    setFitConfig((prev) => ({ ...prev, [field]: value }));
+  };
 
   const isFormValid = () => {
     const p = form.params;
@@ -72,7 +100,17 @@ function App() {
   };
 
   const handleRun = () => {
-    if (form.file) {
+    if (!form.file) return;
+    if (activeTab === "fitting" && fittingEnabled) {
+      fitting.startFit(
+        form.analysisMode,
+        form.params,
+        form.anisotropicParams,
+        form.transverseParams,
+        fitConfig,
+        form.file,
+      );
+    } else {
       analysis.runAnalysis(
         form.analysisMode,
         form.params,
@@ -86,7 +124,10 @@ function App() {
   const handleClear = () => {
     dispatch({ type: "CLEAR" });
     analysis.reset();
+    fitting.resetFit();
   };
+
+  const isProcessing = analysis.isProcessing || fitting.isFitting;
 
   const handleFieldChange = (field: keyof IsotropicParams, value: string) => {
     dispatch({ type: "SET_FIELD", field, value });
@@ -125,53 +166,71 @@ function App() {
             <AnalysisModeSelector
               mode={form.analysisMode}
               onChange={(mode) => dispatch({ type: "SET_MODE", mode })}
-              disabled={analysis.isProcessing}
+              disabled={isProcessing}
             />
             <FileUpload
               file={form.file}
               onFileChange={(file) => dispatch({ type: "SET_FILE", file })}
-              disabled={analysis.isProcessing}
+              disabled={isProcessing}
             />
           </div>
 
-          <ForwardModelForm
-            analysisMode={form.analysisMode}
-            params={form.params}
-            anisotropicParams={form.anisotropicParams}
-            transverseParams={form.transverseParams}
-            lensOption={form.lensOption}
-            mediumOption={form.mediumOption}
-            laserOption={form.laserOption}
-            collapsedSections={form.collapsedSections}
-            onFieldChange={handleFieldChange}
-            onArrayFieldChange={handleArrayFieldChange}
-            onAnisoFieldChange={handleAnisoFieldChange}
-            onTransverseFieldChange={handleTransverseFieldChange}
-            onLensChange={(opt) =>
-              dispatch({ type: "SET_LENS_OPTION", option: opt })
-            }
-            onMediumChange={(opt) =>
-              dispatch({ type: "SET_MEDIUM_OPTION", option: opt })
-            }
-            onLaserChange={(opt) =>
-              dispatch({ type: "SET_LASER_OPTION", option: opt })
-            }
-            onToggleSection={(s) =>
-              dispatch({ type: "TOGGLE_SECTION", section: s })
-            }
-            disabled={analysis.isProcessing}
+          <TabBar
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            fittingEnabled={fittingEnabled}
           />
+
+          {activeTab === "forward" ? (
+            <ForwardModelForm
+              analysisMode={form.analysisMode}
+              params={form.params}
+              anisotropicParams={form.anisotropicParams}
+              transverseParams={form.transverseParams}
+              lensOption={form.lensOption}
+              mediumOption={form.mediumOption}
+              laserOption={form.laserOption}
+              collapsedSections={form.collapsedSections}
+              onFieldChange={handleFieldChange}
+              onArrayFieldChange={handleArrayFieldChange}
+              onAnisoFieldChange={handleAnisoFieldChange}
+              onTransverseFieldChange={handleTransverseFieldChange}
+              onLensChange={(opt) =>
+                dispatch({ type: "SET_LENS_OPTION", option: opt })
+              }
+              onMediumChange={(opt) =>
+                dispatch({ type: "SET_MEDIUM_OPTION", option: opt })
+              }
+              onLaserChange={(opt) =>
+                dispatch({ type: "SET_LASER_OPTION", option: opt })
+              }
+              onToggleSection={(s) =>
+                dispatch({ type: "TOGGLE_SECTION", section: s })
+              }
+              disabled={isProcessing}
+            />
+          ) : (
+            <div className="flex-1 overflow-y-auto">
+              <FitConfigForm
+                config={fitConfig}
+                fittableParams={fittableParams}
+                onChange={handleFitConfigChange}
+                disabled={isProcessing}
+              />
+            </div>
+          )}
 
           <ActionBar
             onRun={handleRun}
             onClear={handleClear}
-            isProcessing={analysis.isProcessing}
+            isProcessing={isProcessing}
             isValid={isFormValid()}
           />
         </div>
 
         {/* Right panel: Results */}
         <div className="flex flex-1 flex-col overflow-y-auto p-4">
+          {/* Forward model status */}
           {analysis.status && (
             <div
               className={`mb-4 rounded px-3 py-2 text-sm ${
@@ -186,6 +245,20 @@ function App() {
             </div>
           )}
 
+          {/* Fitting progress/result */}
+          {(fitting.isFitting || fitting.result || fitting.error) && (
+            <div className="mb-4">
+              <FittingProgress
+                progress={fitting.progress}
+                result={fitting.result}
+                isFitting={fitting.isFitting}
+                error={fitting.error}
+                onCancel={fitting.cancelFit}
+              />
+            </div>
+          )}
+
+          {/* Forward model results */}
           {analysis.result && (
             <>
               <ResultsSummary
@@ -198,7 +271,25 @@ function App() {
             </>
           )}
 
-          {!analysis.result && !analysis.isProcessing && (
+          {/* Fitting results plot */}
+          {fitting.result && !analysis.result && (
+            <div className="mt-4 min-h-0 flex-1">
+              <PlotPanel
+                data={{
+                  model_freqs: fitting.result.model_freqs,
+                  in_model: fitting.result.in_model,
+                  out_model: fitting.result.out_model,
+                  ratio_model: fitting.result.ratio_model,
+                  exp_freqs: fitting.result.exp_freqs,
+                  in_exp: fitting.result.in_exp,
+                  out_exp: fitting.result.out_exp,
+                  ratio_exp: fitting.result.ratio_exp,
+                }}
+              />
+            </div>
+          )}
+
+          {!analysis.result && !fitting.result && !isProcessing && (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-gray-500">
                 Upload a data file and click "Run Analysis" to see results.

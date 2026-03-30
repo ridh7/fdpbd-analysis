@@ -52,3 +52,33 @@ export const TransverseResultSchema = z.object({
 });
 
 export type TransverseResult = z.infer<typeof TransverseResultSchema>;
+
+// SSE fitting event schemas
+export const FitProgressSchema = z.object({
+  generation: z.number(),
+  max_generations: z.number(),
+  best_value: z.number(),
+  convergence: z.number(),
+  elapsed_s: z.number(),
+});
+
+export const FitResultSchema = z.object({
+  fitted_param_name: z.string(),
+  fitted_param_value: z.number(),
+  final_cost: z.number(),
+  total_time_s: z.number(),
+  message: z.string(),
+  model_freqs: z.array(z.number()),
+  in_model: z.array(z.number()),
+  out_model: z.array(z.number()),
+  ratio_model: z.array(z.number()),
+  exp_freqs: z.array(z.number()),
+  in_exp: z.array(z.number()),
+  out_exp: z.array(z.number()),
+  ratio_exp: z.array(z.number()),
+  f_peak: z.number().nullable(),
+  ratio_at_peak: z.number().nullable(),
+});
+
+export type FitProgress = z.infer<typeof FitProgressSchema>;
+export type FitResultData = z.infer<typeof FitResultSchema>;
