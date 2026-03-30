@@ -1,5 +1,6 @@
 interface ActionBarProps {
   onRun: () => void;
+  onReset: () => void;
   onClear: () => void;
   isProcessing: boolean;
   isValid: boolean;
@@ -7,6 +8,7 @@ interface ActionBarProps {
 
 export function ActionBar({
   onRun,
+  onReset,
   onClear,
   isProcessing,
   isValid,
@@ -30,6 +32,15 @@ export function ActionBar({
           hover:bg-gray-500 disabled:opacity-50"
       >
         Clear
+      </button>
+      <button
+        type="button"
+        onClick={onReset}
+        disabled={isProcessing}
+        className="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white
+          hover:bg-gray-500 disabled:opacity-50"
+      >
+        Reset
       </button>
     </div>
   );

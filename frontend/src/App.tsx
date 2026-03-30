@@ -102,6 +102,7 @@ function App() {
   const handleRun = () => {
     if (!form.file) return;
     if (activeTab === "fitting" && fittingEnabled) {
+      analysis.reset();
       fitting.startFit(
         form.analysisMode,
         form.params,
@@ -111,6 +112,7 @@ function App() {
         form.file,
       );
     } else {
+      fitting.resetFit();
       analysis.runAnalysis(
         form.analysisMode,
         form.params,
@@ -121,8 +123,14 @@ function App() {
     }
   };
 
-  const handleClear = () => {
+  const handleReset = () => {
     dispatch({ type: "CLEAR" });
+    analysis.reset();
+    fitting.resetFit();
+  };
+
+  const handleClear = () => {
+    dispatch({ type: "CLEAR_VALUES" });
     analysis.reset();
     fitting.resetFit();
   };
@@ -222,6 +230,7 @@ function App() {
 
           <ActionBar
             onRun={handleRun}
+            onReset={handleReset}
             onClear={handleClear}
             isProcessing={isProcessing}
             isValid={isFormValid()}

@@ -1,3 +1,5 @@
+import { useRef, useEffect } from "react";
+
 interface FileUploadProps {
   file: File | null;
   onFileChange: (file: File | null) => void;
@@ -5,6 +7,15 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ file, onFileChange, disabled }: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset the input value when file is cleared so the same file can be re-selected
+  useEffect(() => {
+    if (!file && inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }, [file]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected && selected.name.endsWith(".txt")) {
@@ -19,6 +30,7 @@ export function FileUpload({ file, onFileChange, disabled }: FileUploadProps) {
       <label className="cursor-pointer rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
         Choose File
         <input
+          ref={inputRef}
           type="file"
           accept=".txt"
           onChange={handleChange}

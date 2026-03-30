@@ -8,12 +8,14 @@ interface PlotPanelProps {
 
 export function PlotPanel({ data }: PlotPanelProps) {
   return (
-    <div className="grid h-full grid-rows-2 gap-4">
-      <div className="min-h-0">
-        <InOutPhasePlot data={data} />
-      </div>
-      <div className="min-h-0">
-        <RatioPlot data={data} />
+    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="aspect-square">
+          <InOutPhasePlot data={data} />
+        </div>
+        <div className="aspect-square">
+          <RatioPlot data={data} />
+        </div>
       </div>
     </div>
   );

@@ -60,7 +60,7 @@ export function RatioPlot({ data }: RatioPlotProps) {
         paper_bgcolor: "transparent",
         plot_bgcolor: "rgba(30,30,30,0.8)",
         font: { color: "#d1d5db", size: 12 },
-        legend: { x: 0.01, y: 0.99 },
+        legend: { x: 1, xanchor: "right", y: 0.99 },
         margin: { l: 60, r: 20, t: 40, b: 50 },
         autosize: true,
       }}
