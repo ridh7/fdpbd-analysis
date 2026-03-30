@@ -1,4 +1,4 @@
-"""Numerical integration using the Romberg method."""
+"""Numerical integration methods: Romberg and Simpson's rule."""
 
 from collections.abc import Callable
 from typing import Any
@@ -58,3 +58,14 @@ def romberg_integration(
     real_result: float = integrate_part(real_integrator)
     imag_result: float = integrate_part(imag_integrator)
     return complex(real_result + 1j * imag_result)
+
+
+def simpson_integration(y: NDArray[np.complex128], dx: float) -> complex:
+    """Simpson's rule for equally-spaced data (supports complex values).
+
+    Requires an odd number of points >= 3.
+    """
+    n = y.size
+    if n < 3 or n % 2 == 0:
+        raise ValueError("Simpson integration requires odd number of points >= 3.")
+    return complex(dx / 3 * (y[0] + y[-1] + 4 * y[1:-1:2].sum() + 2 * y[2:-1:2].sum()))

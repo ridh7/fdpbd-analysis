@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { FDPBDResultSchema } from "../../schemas/results";
+import {
+  FDPBDResultSchema,
+  AnisotropicResultSchema,
+} from "../../schemas/results";
 
 describe("FDPBDResultSchema", () => {
   it("accepts valid result data", () => {
@@ -41,6 +44,52 @@ describe("FDPBDResultSchema", () => {
           delta_out: [],
           delta_ratio: [],
         },
+      }),
+    ).toThrow();
+  });
+});
+
+describe("AnisotropicResultSchema", () => {
+  const validAnisotropicResult = {
+    f_peak: 50000,
+    ratio_at_peak: 1.234,
+    lambda_measure: null,
+    alpha_t_fitted: null,
+    t_ss_heat: null,
+    plot_data: {
+      model_freqs: [100, 200, 300],
+      in_model: [0.1, 0.2, 0.3],
+      out_model: [0.01, 0.02, 0.03],
+      ratio_model: [10, 10, 10],
+      exp_freqs: [100, 200, 300],
+      in_exp: [0.11, 0.21, 0.31],
+      out_exp: [0.012, 0.022, 0.032],
+      ratio_exp: [9.2, 9.5, 9.7],
+    },
+  };
+
+  it("accepts valid anisotropic result with nullable fields", () => {
+    const result = AnisotropicResultSchema.parse(validAnisotropicResult);
+    expect(result.f_peak).toBe(50000);
+    expect(result.lambda_measure).toBeNull();
+    expect(result.plot_data.model_freqs).toHaveLength(3);
+  });
+
+  it("accepts anisotropic result with all numeric fields", () => {
+    const result = AnisotropicResultSchema.parse({
+      ...validAnisotropicResult,
+      lambda_measure: 10.5,
+      alpha_t_fitted: 1e-5,
+      t_ss_heat: 0.3,
+    });
+    expect(result.lambda_measure).toBe(10.5);
+  });
+
+  it("rejects missing plot_data", () => {
+    expect(() =>
+      AnisotropicResultSchema.parse({
+        f_peak: 50000,
+        ratio_at_peak: 1.234,
       }),
     ).toThrow();
   });

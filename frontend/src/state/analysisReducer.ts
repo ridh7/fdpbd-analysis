@@ -1,7 +1,11 @@
-import type { FDPBDResult } from "../schemas/results";
+import type { FDPBDResult, AnisotropicResult } from "../schemas/results";
+
+export type AnalysisResult =
+  | { mode: "isotropic"; data: FDPBDResult }
+  | { mode: "anisotropic"; data: AnisotropicResult };
 
 export interface AnalysisState {
-  result: FDPBDResult | null;
+  result: AnalysisResult | null;
   status: string;
   isProcessing: boolean;
   timeTaken: number | null;
@@ -10,7 +14,7 @@ export interface AnalysisState {
 
 export type AnalysisAction =
   | { type: "START" }
-  | { type: "SUCCESS"; result: FDPBDResult; timeTaken: number }
+  | { type: "SUCCESS"; result: AnalysisResult; timeTaken: number }
   | { type: "ERROR"; error: string }
   | { type: "RESET" };
 

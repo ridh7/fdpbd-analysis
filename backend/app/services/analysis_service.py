@@ -3,7 +3,9 @@
 import tempfile
 from pathlib import Path
 
+from app.core.anisotropic.analysis import run_anisotropic_analysis
 from app.core.isotropic.analysis import run_fdpbd_analysis
+from app.models.anisotropic import AnisotropicFDPBDParams, AnisotropicFDPBDResult
 from app.models.isotropic import FDPBDParams, FDPBDResult
 
 
@@ -21,6 +23,17 @@ class AnalysisService:
         tmp_path = self._save_temp_file(file_content)
         try:
             return run_fdpbd_analysis(params, tmp_path)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    async def run_anisotropic(
+        self, params: AnisotropicFDPBDParams, file_content: bytes
+    ) -> AnisotropicFDPBDResult:
+        """Run anisotropic FD-PBD analysis on uploaded data."""
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        tmp_path = self._save_temp_file(file_content)
+        try:
+            return run_anisotropic_analysis(params, tmp_path)
         finally:
             tmp_path.unlink(missing_ok=True)
 

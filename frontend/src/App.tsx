@@ -4,11 +4,12 @@ import { useAnalysis } from "./hooks/useAnalysis";
 import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
 import { AppHeader } from "./components/layout/AppHeader";
 import { FileUpload } from "./components/form/FileUpload";
+import { AnalysisModeSelector } from "./components/form/AnalysisModeSelector";
 import { ForwardModelForm } from "./components/form/ForwardModelForm";
 import { ActionBar } from "./components/form/ActionBar";
 import { ResultsSummary } from "./components/results/ResultsSummary";
 import { PlotPanel } from "./components/results/PlotPanel";
-import type { IsotropicParams } from "./schemas/params";
+import type { IsotropicParams, AnisotropicExtra } from "./schemas/params";
 
 function App() {
   const [form, dispatch] = useReducer(formReducer, initialFormState);
@@ -20,12 +21,6 @@ function App() {
       p.f_rolloff,
       p.delay_1,
       p.delay_2,
-      p.niu,
-      p.alpha_t,
-      p.lambda_up,
-      p.eta_up,
-      p.c_up,
-      p.h_up,
       p.w_rms,
       p.x_offset,
       p.incident_pump,
@@ -35,19 +30,45 @@ function App() {
       p.lens_transmittance,
       p.detector_factor,
     ];
-    return (
+
+    const baseValid =
       scalars.every(isValidDecimal) &&
       areAllValidDecimals([...p.lambda_down]) &&
-      areAllValidDecimals([...p.eta_down]) &&
       areAllValidDecimals([...p.c_down]) &&
       areAllValidDecimals([...p.h_down]) &&
-      form.file !== null
+      form.file !== null;
+
+    if (form.analysisMode === "isotropic") {
+      return (
+        baseValid &&
+        isValidDecimal(p.niu) &&
+        isValidDecimal(p.alpha_t) &&
+        isValidDecimal(p.lambda_up) &&
+        isValidDecimal(p.eta_up) &&
+        isValidDecimal(p.c_up) &&
+        isValidDecimal(p.h_up) &&
+        areAllValidDecimals([...p.eta_down])
+      );
+    }
+
+    // Anisotropic: validate extra fields
+    const a = form.anisotropicParams;
+    return (
+      baseValid &&
+      isValidDecimal(p.lambda_up) &&
+      isValidDecimal(p.c_up) &&
+      Object.values(a).every(isValidDecimal)
     );
   };
 
   const handleRun = () => {
     if (form.file) {
-      analysis.runAnalysis(form.params, form.file);
+      analysis.runAnalysis(
+        form.analysisMode,
+        form.params,
+        form.anisotropicParams,
+        form.file,
+      );
     }
   };
 
@@ -68,6 +89,13 @@ function App() {
     dispatch({ type: "SET_ARRAY_FIELD", field, index, value });
   };
 
+  const handleAnisoFieldChange = (
+    field: keyof AnisotropicExtra,
+    value: string,
+  ) => {
+    dispatch({ type: "SET_ANISO_FIELD", field, value });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gray-900 text-white">
       <AppHeader />
@@ -75,7 +103,12 @@ function App() {
       <div className="flex min-h-0 flex-1">
         {/* Left panel: Input form */}
         <div className="flex w-1/3 min-w-80 flex-col border-r border-gray-700">
-          <div className="border-b border-gray-700 p-3">
+          <div className="space-y-3 border-b border-gray-700 p-3">
+            <AnalysisModeSelector
+              mode={form.analysisMode}
+              onChange={(mode) => dispatch({ type: "SET_MODE", mode })}
+              disabled={analysis.isProcessing}
+            />
             <FileUpload
               file={form.file}
               onFileChange={(file) => dispatch({ type: "SET_FILE", file })}
@@ -84,13 +117,16 @@ function App() {
           </div>
 
           <ForwardModelForm
+            analysisMode={form.analysisMode}
             params={form.params}
+            anisotropicParams={form.anisotropicParams}
             lensOption={form.lensOption}
             mediumOption={form.mediumOption}
             laserOption={form.laserOption}
             collapsedSections={form.collapsedSections}
             onFieldChange={handleFieldChange}
             onArrayFieldChange={handleArrayFieldChange}
+            onAnisoFieldChange={handleAnisoFieldChange}
             onLensChange={(opt) =>
               dispatch({ type: "SET_LENS_OPTION", option: opt })
             }
@@ -137,7 +173,7 @@ function App() {
                 timeTaken={analysis.timeTaken}
               />
               <div className="mt-4 min-h-0 flex-1">
-                <PlotPanel data={analysis.result.plot_data} />
+                <PlotPanel data={analysis.result.data.plot_data} />
               </div>
             </>
           )}

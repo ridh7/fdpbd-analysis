@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { buildIsotropicPayload } from "../../lib/unitConversions";
-import { ISOTROPIC_DEFAULTS } from "../../constants/defaults";
+import {
+  buildIsotropicPayload,
+  buildAnisotropicPayload,
+} from "../../lib/unitConversions";
+import {
+  ISOTROPIC_DEFAULTS,
+  ANISOTROPIC_DEFAULTS,
+} from "../../constants/defaults";
 
 describe("buildIsotropicPayload", () => {
   it("converts w_rms from µm to m", () => {
@@ -51,5 +57,63 @@ describe("buildIsotropicPayload", () => {
   it("sends eta_down as comma-separated string", () => {
     const payload = buildIsotropicPayload(ISOTROPIC_DEFAULTS);
     expect(payload.eta_down).toBe("1.0,1.0,1.0");
+  });
+});
+
+describe("buildAnisotropicPayload", () => {
+  const payload = buildAnisotropicPayload(
+    ISOTROPIC_DEFAULTS,
+    ANISOTROPIC_DEFAULTS,
+  );
+
+  it("converts rho from g/cm³ to kg/m³", () => {
+    // 2.70 g/cm³ → 2700 kg/m³
+    expect(payload.rho).toBeCloseTo(2700, 0);
+  });
+
+  it("converts rho_sample from g/cm³ to kg/m³", () => {
+    // 1.38 g/cm³ → 1380 kg/m³
+    expect(payload.rho_sample).toBeCloseTo(1380, 0);
+  });
+
+  it("converts elastic constants from GPa to Pa", () => {
+    // 107.4 GPa → 107.4e9 Pa
+    expect(payload.C11_0).toBeCloseTo(107.4e9, 0);
+    expect(payload.C12_0).toBeCloseTo(60.5e9, 0);
+    expect(payload.C44_0).toBeCloseTo(28.3e9, 0);
+  });
+
+  it("converts sample elastic constants from GPa to Pa", () => {
+    expect(payload.C11_0_sample).toBeCloseTo(12.11e9, 0);
+    expect(payload.C44_0_sample).toBeCloseTo(1.20e9, 0);
+  });
+
+  it("sends only transducer layer for lambda_down and h_down", () => {
+    const ld = payload.lambda_down as number[];
+    const hd = payload.h_down as number[];
+    expect(ld).toHaveLength(1);
+    expect(hd).toHaveLength(1);
+  });
+
+  it("sends all layers for c_down", () => {
+    const cd = payload.c_down as number[];
+    expect(cd).toHaveLength(3);
+    expect(cd[0]).toBeCloseTo(2.44e6, 0);
+    expect(cd[1]).toBeCloseTo(0.1e6, 0);
+    expect(cd[2]).toBeCloseTo(2.73e6, 0);
+  });
+
+  it("does not include isotropic-only fields", () => {
+    expect(payload).not.toHaveProperty("eta_down");
+    expect(payload).not.toHaveProperty("h_up");
+    expect(payload).not.toHaveProperty("niu");
+    expect(payload).not.toHaveProperty("alpha_t");
+    expect(payload).not.toHaveProperty("incident_probe");
+  });
+
+  it("passes through conductivities without conversion", () => {
+    expect(payload.lambda_down_x_sample).toBeCloseTo(0.3, 10);
+    expect(payload.lambda_down_y_sample).toBeCloseTo(0.5, 10);
+    expect(payload.lambda_down_z_sample).toBeCloseTo(0.3, 10);
   });
 });

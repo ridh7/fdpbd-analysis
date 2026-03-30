@@ -1,9 +1,9 @@
-import type { PlotData } from "../../schemas/results";
+import type { PlotData, AnisotropicPlotData } from "../../schemas/results";
 import { InOutPhasePlot } from "./charts/InOutPhasePlot";
 import { RatioPlot } from "./charts/RatioPlot";
 
 interface PlotPanelProps {
-  data: PlotData;
+  data: PlotData | AnisotropicPlotData;
 }
 
 export function PlotPanel({ data }: PlotPanelProps) {

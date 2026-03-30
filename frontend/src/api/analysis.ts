@@ -1,5 +1,8 @@
-import { FDPBDResultSchema } from "../schemas/results";
-import type { FDPBDResult } from "../schemas/results";
+import {
+  FDPBDResultSchema,
+  AnisotropicResultSchema,
+} from "../schemas/results";
+import type { FDPBDResult, AnisotropicResult } from "../schemas/results";
 import { postMultipart } from "./client";
 
 /**
@@ -12,4 +15,19 @@ export async function analyzeIsotropic(
 ): Promise<FDPBDResult> {
   const raw = await postMultipart<unknown>("/fdpbd/analyze", params, file);
   return FDPBDResultSchema.parse(raw);
+}
+
+/**
+ * Run anisotropic FD-PBD analysis.
+ */
+export async function analyzeAnisotropic(
+  params: Record<string, unknown>,
+  file: File,
+): Promise<AnisotropicResult> {
+  const raw = await postMultipart<unknown>(
+    "/fdpbd/analyze_anisotropy",
+    params,
+    file,
+  );
+  return AnisotropicResultSchema.parse(raw);
 }

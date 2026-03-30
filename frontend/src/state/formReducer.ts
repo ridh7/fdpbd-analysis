@@ -1,10 +1,13 @@
-import type { IsotropicParams } from "../schemas/params";
+import type { IsotropicParams, AnisotropicExtra } from "../schemas/params";
 import type { LensOption, MediumOption, LaserOption } from "../constants/presets";
-import { ISOTROPIC_DEFAULTS } from "../constants/defaults";
+import type { AnalysisMode } from "../constants/defaults";
+import { ISOTROPIC_DEFAULTS, ANISOTROPIC_DEFAULTS } from "../constants/defaults";
 import { LENS_PRESETS, MEDIUM_PRESETS, LASER_PRESETS } from "../constants/presets";
 
 export interface FormState {
+  analysisMode: AnalysisMode;
   params: IsotropicParams;
+  anisotropicParams: AnisotropicExtra;
   file: File | null;
   lensOption: LensOption;
   mediumOption: MediumOption;
@@ -20,6 +23,8 @@ export type FormAction =
       index: number;
       value: string;
     }
+  | { type: "SET_ANISO_FIELD"; field: keyof AnisotropicExtra; value: string }
+  | { type: "SET_MODE"; mode: AnalysisMode }
   | { type: "SET_FILE"; file: File | null }
   | { type: "SET_LENS_OPTION"; option: LensOption }
   | { type: "SET_MEDIUM_OPTION"; option: MediumOption }
@@ -28,7 +33,9 @@ export type FormAction =
   | { type: "CLEAR" };
 
 export const initialFormState: FormState = {
+  analysisMode: "isotropic",
   params: ISOTROPIC_DEFAULTS,
+  anisotropicParams: ANISOTROPIC_DEFAULTS,
   file: null,
   lensOption: "5x",
   mediumOption: "air",
@@ -52,6 +59,18 @@ export function formReducer(state: FormState, action: FormAction): FormState {
         params: { ...state.params, [action.field]: arr },
       };
     }
+
+    case "SET_ANISO_FIELD":
+      return {
+        ...state,
+        anisotropicParams: {
+          ...state.anisotropicParams,
+          [action.field]: action.value,
+        },
+      };
+
+    case "SET_MODE":
+      return { ...state, analysisMode: action.mode };
 
     case "SET_FILE":
       return { ...state, file: action.file };
