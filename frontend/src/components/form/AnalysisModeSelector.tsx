@@ -27,8 +27,8 @@ export function AnalysisModeSelector({
           disabled={disabled}
           className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
             mode === m.value
-              ? "bg-blue-600 text-white"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+              ? "bg-(--mode-btn-active-bg) text-(--mode-btn-active-text)"
+              : "bg-(--mode-btn-bg) text-(--mode-btn-text) hover:bg-(--mode-btn-hover)"
           } disabled:opacity-50`}
         >
           {m.label}

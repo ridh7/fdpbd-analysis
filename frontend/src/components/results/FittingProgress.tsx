@@ -17,7 +17,7 @@ export function FittingProgress({
 }: FittingProgressProps) {
   if (error) {
     return (
-      <div className="rounded bg-red-900/50 px-3 py-2 text-sm text-red-300">
+      <div className="rounded bg-(--status-error-bg) px-3 py-1.5 text-sm text-(--status-error-text)">
         Fitting error: {error}
       </div>
     );
@@ -25,31 +25,31 @@ export function FittingProgress({
 
   if (result) {
     return (
-      <div className="space-y-2 rounded bg-green-900/50 px-3 py-3 text-sm text-green-300">
+      <div className="space-y-2 rounded bg-(--status-success-bg) px-3 py-3 text-sm text-(--status-success-text)">
         <div className="font-medium">Fitting Complete</div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          <span className="text-gray-400">Fitted Parameter:</span>
+          <span className="text-(--text-muted)">Fitted Parameter:</span>
           <span>{result.fitted_param_name}</span>
-          <span className="text-gray-400">Fitted Value:</span>
+          <span className="text-(--text-muted)">Fitted Value:</span>
           <span>{result.fitted_param_value.toExponential(4)}</span>
-          <span className="text-gray-400">Final Cost:</span>
+          <span className="text-(--text-muted)">Final Cost:</span>
           <span>{result.final_cost.toExponential(4)}</span>
-          <span className="text-gray-400">Total Time:</span>
+          <span className="text-(--text-muted)">Total Time:</span>
           <span>{result.total_time_s.toFixed(1)}s</span>
           {result.f_peak != null && (
             <>
-              <span className="text-gray-400">Peak Frequency:</span>
+              <span className="text-(--text-muted)">Peak Frequency:</span>
               <span>{result.f_peak.toFixed(1)} Hz</span>
             </>
           )}
           {result.ratio_at_peak != null && (
             <>
-              <span className="text-gray-400">Ratio at Peak:</span>
+              <span className="text-(--text-muted)">Ratio at Peak:</span>
               <span>{result.ratio_at_peak.toFixed(4)}</span>
             </>
           )}
         </div>
-        <div className="text-xs text-gray-500">{result.message}</div>
+        <div className="text-xs text-(--text-placeholder)">{result.message}</div>
       </div>
     );
   }
@@ -60,16 +60,16 @@ export function FittingProgress({
 
   if (isFitting && !progress) {
     return (
-      <div className="space-y-2 rounded bg-blue-900/50 px-3 py-3 text-sm text-blue-300">
+      <div className="space-y-2 rounded bg-(--status-info-bg) px-3 py-3 text-sm text-(--status-info-text)">
         <div className="font-medium">
           Starting DE fitting...
         </div>
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-(--text-muted)">
           Evaluating initial population. First progress update will appear after generation 1 completes.
         </div>
         {/* Indeterminate sliding progress bar */}
-        <div className="h-2 overflow-hidden rounded-full bg-gray-700">
-          <div className="h-full w-1/3 animate-slide rounded-full bg-blue-500" />
+        <div className="h-2 overflow-hidden rounded-full bg-(--progress-bar-bg)">
+          <div className="h-full w-1/3 animate-slide rounded-full bg-(--progress-bar-fill)" />
         </div>
       </div>
     );
@@ -80,28 +80,28 @@ export function FittingProgress({
   const pct = (progress.generation / progress.max_generations) * 100;
 
   return (
-    <div className="space-y-2 rounded bg-blue-900/50 px-3 py-3 text-sm text-blue-300">
+    <div className="space-y-2 rounded bg-(--status-info-bg) px-3 py-3 text-sm text-(--status-info-text)">
       <div className="flex items-center justify-between">
         <span className="font-medium">
           DE Fitting: Generation {progress.generation} / {progress.max_generations}
         </span>
         <button
           onClick={onCancel}
-          className="rounded bg-red-700 px-2 py-0.5 text-xs text-white hover:bg-red-600"
+          className="rounded bg-(--cancel-btn-bg) px-2 py-0.5 text-xs text-white hover:bg-(--cancel-btn-hover)"
         >
           Cancel
         </button>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 overflow-hidden rounded-full bg-gray-700">
+      <div className="h-2 overflow-hidden rounded-full bg-(--progress-bar-bg)">
         <div
-          className="h-full rounded-full bg-blue-500 transition-all duration-300"
+          className="h-full rounded-full bg-(--progress-bar-fill) transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-xs text-gray-400">
+      <div className="grid grid-cols-3 gap-2 text-xs text-(--text-muted)">
         <span>
           Best: {progress.best_value.toExponential(4)}
         </span>

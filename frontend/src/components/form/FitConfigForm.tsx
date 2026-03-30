@@ -18,17 +18,17 @@ export function FitConfigForm({
   );
 
   return (
-    <div className="space-y-3 p-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+    <div className="space-y-3">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-(--text-muted)">
         DE Fitting Configuration
       </h3>
 
       <div>
-        <label className="mb-1 block text-xs text-gray-400">
+        <label className="mb-1 block text-xs text-(--text-muted)">
           Parameter to Fit
         </label>
         <select
-          className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+          className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
           value={config.parameterToFit}
           onChange={(e) => {
             const param = fittableParams.find((p) => p.key === e.target.value);
@@ -50,24 +50,24 @@ export function FitConfigForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs text-gray-400">
+          <label className="mb-1 block text-xs text-(--text-muted)">
             Lower Bound
           </label>
           <input
             type="text"
-            className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+            className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
             value={config.boundsMin}
             onChange={(e) => onChange("boundsMin", e.target.value)}
             disabled={disabled}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-400">
+          <label className="mb-1 block text-xs text-(--text-muted)">
             Upper Bound
           </label>
           <input
             type="text"
-            className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+            className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
             value={config.boundsMax}
             onChange={(e) => onChange("boundsMax", e.target.value)}
             disabled={disabled}
@@ -77,34 +77,34 @@ export function FitConfigForm({
 
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="mb-1 block text-xs text-gray-400">
+          <label className="mb-1 block text-xs text-(--text-muted)">
             Max Iter
           </label>
           <input
             type="text"
-            className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+            className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
             value={config.maxIterations}
             onChange={(e) => onChange("maxIterations", e.target.value)}
             disabled={disabled}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-400">
+          <label className="mb-1 block text-xs text-(--text-muted)">
             Pop Size
           </label>
           <input
             type="text"
-            className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+            className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
             value={config.populationSize}
             onChange={(e) => onChange("populationSize", e.target.value)}
             disabled={disabled}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-400">Tolerance</label>
+          <label className="mb-1 block text-xs text-(--text-muted)">Tolerance</label>
           <input
             type="text"
-            className="w-full rounded bg-gray-700 px-2 py-1.5 text-sm text-white"
+            className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
             value={config.tolerance}
             onChange={(e) => onChange("tolerance", e.target.value)}
             disabled={disabled}
@@ -113,7 +113,7 @@ export function FitConfigForm({
       </div>
 
       {selectedParam && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-(--text-placeholder)">
           Fitting {selectedParam.label} with bounds [{config.boundsMin},{" "}
           {config.boundsMax}]
         </p>

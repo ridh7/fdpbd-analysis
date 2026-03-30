@@ -2,6 +2,7 @@ import { useReducer, useState } from "react";
 import { formReducer, initialFormState } from "./state/formReducer";
 import { useAnalysis } from "./hooks/useAnalysis";
 import { useFitting } from "./hooks/useFitting";
+import { useTheme } from "./hooks/useTheme";
 import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
 import { AppHeader } from "./components/layout/AppHeader";
 import { FileUpload } from "./components/form/FileUpload";
@@ -29,6 +30,7 @@ function App() {
   const [form, dispatch] = useReducer(formReducer, initialFormState);
   const analysis = useAnalysis();
   const fitting = useFitting();
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<WorkflowTab>("forward");
   const [fitConfig, setFitConfig] = useState<FitConfigState>(DEFAULT_FIT_CONFIG);
 
@@ -164,23 +166,25 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-900 text-white">
-      <AppHeader />
+    <div className="flex h-screen flex-col bg-(--bg-primary) text-(--text-primary)">
+      <AppHeader theme={theme} onToggleTheme={toggleTheme} />
 
       <div className="flex min-h-0 flex-1">
-        {/* Left panel: Input form */}
-        <div className="flex w-1/3 min-w-80 flex-col border-r border-gray-700">
-          <div className="space-y-3 border-b border-gray-700 p-3">
-            <AnalysisModeSelector
-              mode={form.analysisMode}
-              onChange={(mode) => dispatch({ type: "SET_MODE", mode })}
-              disabled={isProcessing}
-            />
-            <FileUpload
-              file={form.file}
-              onFileChange={(file) => dispatch({ type: "SET_FILE", file })}
-              disabled={isProcessing}
-            />
+        {/* Left panel */}
+        <div className="flex w-1/3 min-w-80 flex-col border-r border-(--border-primary)">
+          <div className="space-y-3 p-3">
+            <div className="space-y-3 rounded-lg border border-(--border-primary) bg-(--bg-secondary) p-3">
+              <AnalysisModeSelector
+                mode={form.analysisMode}
+                onChange={(mode) => dispatch({ type: "SET_MODE", mode })}
+                disabled={isProcessing}
+              />
+              <FileUpload
+                file={form.file}
+                onFileChange={(file) => dispatch({ type: "SET_FILE", file })}
+                disabled={isProcessing}
+              />
+            </div>
           </div>
 
           <TabBar
@@ -218,13 +222,15 @@ function App() {
               disabled={isProcessing}
             />
           ) : (
-            <div className="flex-1 overflow-y-auto">
-              <FitConfigForm
-                config={fitConfig}
-                fittableParams={fittableParams}
-                onChange={handleFitConfigChange}
-                disabled={isProcessing}
-              />
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="rounded-lg border border-(--border-primary) bg-(--bg-secondary) p-3">
+                <FitConfigForm
+                  config={fitConfig}
+                  fittableParams={fittableParams}
+                  onChange={handleFitConfigChange}
+                  disabled={isProcessing}
+                />
+              </div>
             </div>
           )}
 
@@ -237,17 +243,17 @@ function App() {
           />
         </div>
 
-        {/* Right panel: Results */}
-        <div className="flex flex-1 flex-col overflow-y-auto p-4">
-          {/* Forward model status */}
+        {/* Right panel */}
+        <div className="flex flex-1 flex-col overflow-y-auto p-3">
+          {/* Status indicator */}
           {analysis.status && (
             <div
-              className={`mb-4 rounded px-3 py-2 text-sm ${
+              className={`mb-3 rounded px-3 py-1.5 text-sm ${
                 analysis.error
-                  ? "bg-red-900/50 text-red-300"
+                  ? "bg-(--status-error-bg) text-(--status-error-text)"
                   : analysis.isProcessing
-                    ? "bg-blue-900/50 text-blue-300"
-                    : "bg-green-900/50 text-green-300"
+                    ? "bg-(--status-info-bg) text-(--status-info-text)"
+                    : "bg-(--status-success-bg) text-(--status-success-text)"
               }`}
             >
               {analysis.status}
@@ -256,7 +262,7 @@ function App() {
 
           {/* Fitting progress/result */}
           {(fitting.isFitting || fitting.result || fitting.error) && (
-            <div className="mb-4">
+            <div className="mb-3">
               <FittingProgress
                 progress={fitting.progress}
                 result={fitting.result}
@@ -274,16 +280,17 @@ function App() {
                 result={analysis.result}
                 timeTaken={analysis.timeTaken}
               />
-              <div className="mt-4 min-h-0 flex-1">
-                <PlotPanel data={analysis.result.data.plot_data} />
+              <div className="mt-3 min-h-0 flex-1">
+                <PlotPanel data={analysis.result.data.plot_data} theme={theme} />
               </div>
             </>
           )}
 
           {/* Fitting results plot */}
           {fitting.result && !analysis.result && (
-            <div className="mt-4 min-h-0 flex-1">
+            <div className="min-h-0 flex-1">
               <PlotPanel
+                theme={theme}
                 data={{
                   model_freqs: fitting.result.model_freqs,
                   in_model: fitting.result.in_model,
@@ -300,7 +307,7 @@ function App() {
 
           {!analysis.result && !fitting.result && !isProcessing && (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-gray-500">
+              <p className="text-(--text-muted)">
                 Upload a data file and click "Run Analysis" to see results.
               </p>
             </div>

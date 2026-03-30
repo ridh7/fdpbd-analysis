@@ -13,7 +13,7 @@ export function PresetRadioGroup<T extends string>({
 }: PresetRadioGroupProps<T>) {
   return (
     <div className="flex items-center gap-3 text-sm">
-      <span className="text-gray-300">{label}:</span>
+      <span className="text-(--text-secondary)">{label}:</span>
       <div className="flex gap-2">
         {options.map((opt) => (
           <button
@@ -22,8 +22,8 @@ export function PresetRadioGroup<T extends string>({
             onClick={() => onChange(opt)}
             className={`rounded px-2 py-0.5 text-xs font-medium ${
               value === opt
-                ? "bg-blue-600 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                ? "bg-(--mode-btn-active-bg) text-(--mode-btn-active-text)"
+                : "bg-(--mode-btn-bg) text-(--text-secondary) hover:bg-(--mode-btn-hover)"
             }`}
           >
             {opt}

@@ -22,7 +22,7 @@ export function AnisotropicSampleSection({
 }: AnisotropicSampleSectionProps) {
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-medium text-gray-400">
+      <h4 className="text-xs font-medium text-(--text-muted)">
         Thermal Properties
       </h4>
       <ParamInput
@@ -33,7 +33,7 @@ export function AnisotropicSampleSection({
         disabled={disabled}
       />
 
-      <h4 className="mt-3 text-xs font-medium text-gray-400">
+      <h4 className="mt-3 text-xs font-medium text-(--text-muted)">
         Thermal Conductivity
       </h4>
       <ParamInput
@@ -58,7 +58,7 @@ export function AnisotropicSampleSection({
         disabled={disabled}
       />
 
-      <h4 className="mt-3 text-xs font-medium text-gray-400">
+      <h4 className="mt-3 text-xs font-medium text-(--text-muted)">
         Density & Elastic Constants
       </h4>
       <ParamInput
@@ -104,7 +104,7 @@ export function AnisotropicSampleSection({
         disabled={disabled}
       />
 
-      <h4 className="mt-3 text-xs font-medium text-gray-400">
+      <h4 className="mt-3 text-xs font-medium text-(--text-muted)">
         Thermal Expansion
       </h4>
       <ParamInput

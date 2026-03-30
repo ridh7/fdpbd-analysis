@@ -7,10 +7,10 @@ interface ResultsSummaryProps {
 
 export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
   return (
-    <div className="rounded border border-gray-700 bg-gray-800 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-gray-200">
+    <div className="rounded border border-(--border-primary) bg-(--bg-secondary) p-3">
+      <h3 className="mb-3 text-sm font-semibold text-(--text-secondary)">
         Analysis Results
-        <span className="ml-2 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-400">
+        <span className="ml-2 rounded bg-(--bg-tertiary) px-2 py-0.5 text-xs text-(--text-muted)">
           {result.mode === "isotropic"
             ? "Isotropic"
             : result.mode === "anisotropic"
@@ -19,7 +19,7 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
         </span>
       </h3>
       {result.mode === "isotropic" ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <ResultItem
             label={`Thermal Conductivity (\u03BB)`}
             value={result.data.lambda_measure.toFixed(4)}
@@ -37,7 +37,7 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <ResultItem
             label="Peak Frequency"
             value={
@@ -58,7 +58,7 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
         </div>
       )}
       {timeTaken !== null && (
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-(--text-placeholder)">
           Completed in {timeTaken.toFixed(2)}s
         </div>
       )}
@@ -77,10 +77,10 @@ function ResultItem({
 }) {
   return (
     <div>
-      <div className="text-xs text-gray-400">{label}</div>
-      <div className="text-lg font-medium text-white">
+      <div className="text-xs text-(--text-muted)">{label}</div>
+      <div className="text-lg font-medium text-(--text-primary)">
         {value}{" "}
-        {unit && <span className="text-sm text-gray-400">{unit}</span>}
+        {unit && <span className="text-sm text-(--text-muted)">{unit}</span>}
       </div>
     </div>
   );

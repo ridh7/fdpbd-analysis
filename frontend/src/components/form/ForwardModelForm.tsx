@@ -71,7 +71,7 @@ export function ForwardModelForm({
     analysisMode === "anisotropic" || analysisMode === "transverse_isotropic";
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 space-y-2 overflow-y-auto p-3">
       <AccordionSection
         title="Laser / Electronics"
         isCollapsed={collapsedSections.has("laser")}
@@ -127,7 +127,7 @@ export function ForwardModelForm({
         />
         {showElasticSections && (
           <>
-            <div className="my-2 border-t border-gray-700" />
+            <div className="my-2 border-t border-(--border-primary)" />
             <TransducerElasticSection
               params={anisotropicParams}
               onFieldChange={onAnisoFieldChange}

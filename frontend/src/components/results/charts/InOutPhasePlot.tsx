@@ -1,8 +1,10 @@
 import Plot from "./Plot";
 import type { PlotData, AnisotropicPlotData } from "../../../schemas/results";
+import { darkTheme, lightTheme, type Theme } from "../../../constants/theme";
 
 interface InOutPhasePlotProps {
   data: PlotData | AnisotropicPlotData;
+  theme: Theme;
 }
 
 function isAnisotropicData(
@@ -11,7 +13,9 @@ function isAnisotropicData(
   return "model_freqs" in data;
 }
 
-export function InOutPhasePlot({ data }: InOutPhasePlotProps) {
+export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
+  const palette = theme === "dark" ? darkTheme : lightTheme;
+
   const traces = isAnisotropicData(data)
     ? [
         {
@@ -87,11 +91,11 @@ export function InOutPhasePlot({ data }: InOutPhasePlotProps) {
       data={traces}
       layout={{
         title: { text: "In-Phase / Out-of-Phase Signal" },
-        xaxis: { title: { text: "Frequency (Hz)" }, type: "log" },
-        yaxis: { title: { text: "Signal (V)" } },
+        xaxis: { title: { text: "Frequency (Hz)" }, type: "log", gridcolor: palette.plotGridline },
+        yaxis: { title: { text: "Signal (V)" }, gridcolor: palette.plotGridline },
         paper_bgcolor: "transparent",
-        plot_bgcolor: "rgba(30,30,30,0.8)",
-        font: { color: "#d1d5db", size: 12 },
+        plot_bgcolor: palette.plotBg,
+        font: { color: palette.plotFont, size: 12 },
         legend: { x: 1, xanchor: "right", y: 0.99 },
         margin: { l: 60, r: 20, t: 40, b: 50 },
         autosize: true,

@@ -8,24 +8,24 @@ interface TabBarProps {
 
 export function TabBar({ activeTab, onChange, fittingEnabled }: TabBarProps) {
   return (
-    <div className="flex border-b border-gray-700">
+    <div className="flex gap-2 px-3">
       <button
-        className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+        className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
           activeTab === "forward"
-            ? "border-b-2 border-blue-500 text-blue-400"
-            : "text-gray-400 hover:text-gray-300"
+            ? "bg-(--mode-btn-active-bg) text-(--mode-btn-active-text)"
+            : "bg-(--mode-btn-bg) text-(--mode-btn-text) hover:bg-(--mode-btn-hover)"
         }`}
         onClick={() => onChange("forward")}
       >
         Forward Model
       </button>
       <button
-        className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+        className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
           activeTab === "fitting"
-            ? "border-b-2 border-blue-500 text-blue-400"
+            ? "bg-(--mode-btn-active-bg) text-(--mode-btn-active-text)"
             : fittingEnabled
-              ? "text-gray-400 hover:text-gray-300"
-              : "cursor-not-allowed text-gray-600"
+              ? "bg-(--mode-btn-bg) text-(--mode-btn-text) hover:bg-(--mode-btn-hover)"
+              : "cursor-not-allowed bg-(--mode-btn-bg) text-(--tab-disabled-text) opacity-50"
         }`}
         onClick={() => fittingEnabled && onChange("fitting")}
         disabled={!fittingEnabled}

@@ -14,7 +14,7 @@ export function ActionBar({
   isValid,
 }: ActionBarProps) {
   return (
-    <div className="flex gap-3 border-t border-gray-700 p-3">
+    <div className="flex gap-3 border-t border-(--border-primary) p-3">
       <button
         type="button"
         onClick={onRun}
@@ -28,8 +28,8 @@ export function ActionBar({
         type="button"
         onClick={onClear}
         disabled={isProcessing}
-        className="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white
-          hover:bg-gray-500 disabled:opacity-50"
+        className="rounded bg-(--btn-secondary-bg) px-4 py-2 text-sm font-medium text-(--btn-secondary-text)
+          hover:bg-(--btn-secondary-hover) disabled:opacity-50"
       >
         Clear
       </button>
@@ -37,8 +37,8 @@ export function ActionBar({
         type="button"
         onClick={onReset}
         disabled={isProcessing}
-        className="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white
-          hover:bg-gray-500 disabled:opacity-50"
+        className="rounded bg-(--btn-secondary-bg) px-4 py-2 text-sm font-medium text-(--btn-secondary-text)
+          hover:bg-(--btn-secondary-hover) disabled:opacity-50"
       >
         Reset
       </button>

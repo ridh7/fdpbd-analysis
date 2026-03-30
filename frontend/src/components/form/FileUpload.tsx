@@ -26,7 +26,7 @@ export function FileUpload({ file, onFileChange, disabled }: FileUploadProps) {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded border border-gray-600 bg-gray-750 p-3">
+    <div className="flex items-center gap-3 rounded border border-(--border-input) bg-(--bg-tertiary) p-3">
       <label className="cursor-pointer rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
         Choose File
         <input
@@ -38,7 +38,7 @@ export function FileUpload({ file, onFileChange, disabled }: FileUploadProps) {
           className="hidden"
         />
       </label>
-      <span className="text-sm text-gray-300">
+      <span className="text-sm text-(--text-secondary)">
         {file ? file.name : "No file selected"}
       </span>
     </div>
