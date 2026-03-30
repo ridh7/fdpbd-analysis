@@ -68,7 +68,10 @@ async def analyze_isotropic(
         ) from e
 
     content = await file.read()
-    return await service.run_isotropic(validated_params, content)
+    try:
+        return await service.run_isotropic(validated_params, content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/analyze_anisotropy", response_model=AnisotropicFDPBDResult)
@@ -88,7 +91,10 @@ async def analyze_anisotropic(
         ) from e
 
     content = await file.read()
-    return await service.run_anisotropic(validated_params, content)
+    try:
+        return await service.run_anisotropic(validated_params, content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/analyze_transverse", response_model=TransverseIsotropicResult)
@@ -108,7 +114,10 @@ async def analyze_transverse(
         ) from e
 
     content = await file.read()
-    return await service.run_transverse_isotropic(validated_params, content)
+    try:
+        return await service.run_transverse_isotropic(validated_params, content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 def _sse_event(event: str, data: str) -> str:

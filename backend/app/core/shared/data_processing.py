@@ -27,7 +27,42 @@ def load_data(
     if not filepath.exists():
         raise FileNotFoundError(f"Data file {filepath} not found.")
 
-    data: NDArray[np.float64] = np.loadtxt(filepath).T
+    try:
+        data: NDArray[np.float64] = np.loadtxt(filepath)
+    except ValueError as e:
+        raise ValueError(
+            f"Could not parse data file: {e}. "
+            "Expected a whitespace-delimited text file with 4 numeric columns "
+            "(V_in, V_out, Frequency, V_sum)."
+        ) from e
+
+    if data.ndim == 1:
+        # Single row of data
+        if data.shape[0] != 4:
+            raise ValueError(
+                f"Expected 4 columns but found {data.shape[0]}. "
+                "File must contain columns: V_in, V_out, Frequency, V_sum."
+            )
+        data = data.reshape(1, 4)
+    elif data.ndim == 2:
+        if data.shape[1] != 4:
+            raise ValueError(
+                f"Expected 4 columns but found {data.shape[1]}. "
+                "File must contain columns: V_in, V_out, Frequency, V_sum."
+            )
+    else:
+        raise ValueError(
+            "Data file has unexpected structure. "
+            "Expected a 2D table with 4 numeric columns."
+        )
+
+    if data.shape[0] < 2:
+        raise ValueError(
+            f"Data file has only {data.shape[0]} row(s). "
+            "At least 2 data points are required for analysis."
+        )
+
+    data = data.T
     v_in = data[0]
     v_out = data[1]
     freq = data[2]
