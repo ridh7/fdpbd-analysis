@@ -73,20 +73,6 @@ export function ForwardModelForm({
   return (
     <div className="flex-1 space-y-2 overflow-y-auto p-3">
       <AccordionSection
-        title="Laser / Electronics"
-        isCollapsed={collapsedSections.has("laser")}
-        onToggle={() => onToggleSection("laser")}
-      >
-        <LaserSection
-          params={params}
-          laserOption={laserOption}
-          onFieldChange={onFieldChange}
-          onPresetChange={onLaserChange}
-          disabled={disabled}
-        />
-      </AccordionSection>
-
-      <AccordionSection
         title="Lens / Optics"
         isCollapsed={collapsedSections.has("lens")}
         onToggle={() => onToggleSection("lens")}
@@ -113,6 +99,34 @@ export function ForwardModelForm({
           />
         </AccordionSection>
       )}
+
+      <AccordionSection
+        title="Laser / Electronics"
+        isCollapsed={collapsedSections.has("laser")}
+        onToggle={() => onToggleSection("laser")}
+      >
+        <LaserSection
+          params={params}
+          laserOption={laserOption}
+          onFieldChange={onFieldChange}
+          onPresetChange={onLaserChange}
+          disabled={disabled}
+        />
+      </AccordionSection>
+
+      <AccordionSection
+        title="Medium (Above Sample)"
+        isCollapsed={collapsedSections.has("medium")}
+        onToggle={() => onToggleSection("medium")}
+      >
+        <MediumSection
+          params={params}
+          mediumOption={mediumOption}
+          onFieldChange={onFieldChange}
+          onPresetChange={onMediumChange}
+          disabled={disabled}
+        />
+      </AccordionSection>
 
       <AccordionSection
         title="Transducer (Layer 1)"
@@ -179,22 +193,6 @@ export function ForwardModelForm({
           />
         )}
       </AccordionSection>
-
-      {isIsotropic && (
-        <AccordionSection
-          title="Medium (Above Sample)"
-          isCollapsed={collapsedSections.has("medium")}
-          onToggle={() => onToggleSection("medium")}
-        >
-          <MediumSection
-            params={params}
-            mediumOption={mediumOption}
-            onFieldChange={onFieldChange}
-            onPresetChange={onMediumChange}
-            disabled={disabled}
-          />
-        </AccordionSection>
-      )}
     </div>
   );
 }

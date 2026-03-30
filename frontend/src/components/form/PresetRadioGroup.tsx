@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import { ToggleGroup } from "../ui/ToggleGroup";
+
 interface PresetRadioGroupProps<T extends string> {
   label: string;
   options: readonly T[];
@@ -11,25 +14,15 @@ export function PresetRadioGroup<T extends string>({
   value,
   onChange,
 }: PresetRadioGroupProps<T>) {
+  const toggleOptions = useMemo(
+    () => options.map((opt) => ({ value: opt, label: opt })),
+    [options],
+  );
+
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="text-(--text-secondary)">{label}:</span>
-      <div className="flex gap-2">
-        {options.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(opt)}
-            className={`rounded px-2 py-0.5 text-xs font-medium ${
-              value === opt
-                ? "bg-(--mode-btn-active-bg) text-(--mode-btn-active-text)"
-                : "bg-(--mode-btn-bg) text-(--text-secondary) hover:bg-(--mode-btn-hover)"
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
+      <ToggleGroup options={toggleOptions} value={value} onChange={onChange} size="sm" />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { FitProgress, FitResultData } from "../../schemas/results";
+import { Button } from "../ui/Button";
 
 interface FittingProgressProps {
   progress: FitProgress | null;
@@ -85,12 +86,9 @@ export function FittingProgress({
         <span className="font-medium">
           DE Fitting: Generation {progress.generation} / {progress.max_generations}
         </span>
-        <button
-          onClick={onCancel}
-          className="rounded bg-(--cancel-btn-bg) px-2 py-0.5 text-xs text-white hover:bg-(--cancel-btn-hover)"
-        >
+        <Button variant="danger" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
 
       {/* Progress bar */}

@@ -45,6 +45,8 @@ export type FormAction =
   | { type: "SET_MEDIUM_OPTION"; option: MediumOption }
   | { type: "SET_LASER_OPTION"; option: LaserOption }
   | { type: "TOGGLE_SECTION"; section: string }
+  | { type: "COLLAPSE_ALL" }
+  | { type: "EXPAND_ALL" }
   | { type: "CLEAR" }
   | { type: "CLEAR_VALUES" };
 
@@ -199,6 +201,17 @@ export function formReducer(state: FormState, action: FormAction): FormState {
       }
       return { ...state, collapsedSections: next };
     }
+
+    case "COLLAPSE_ALL":
+      return {
+        ...state,
+        collapsedSections: new Set([
+          "lens", "detection", "laser", "medium", "transducer", "interface", "sample",
+        ]),
+      };
+
+    case "EXPAND_ALL":
+      return { ...state, collapsedSections: new Set<string>() };
 
     case "CLEAR":
       return { ...initialFormState, collapsedSections: new Set<string>() };

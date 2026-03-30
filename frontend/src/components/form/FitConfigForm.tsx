@@ -13,10 +13,6 @@ export function FitConfigForm({
   onChange,
   disabled,
 }: FitConfigFormProps) {
-  const selectedParam = fittableParams.find(
-    (p) => p.key === config.parameterToFit,
-  );
-
   return (
     <div className="space-y-3">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-(--text-muted)">
@@ -111,13 +107,6 @@ export function FitConfigForm({
           />
         </div>
       </div>
-
-      {selectedParam && (
-        <p className="text-xs text-(--text-placeholder)">
-          Fitting {selectedParam.label} with bounds [{config.boundsMin},{" "}
-          {config.boundsMax}]
-        </p>
-      )}
     </div>
   );
 }

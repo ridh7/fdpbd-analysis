@@ -90,7 +90,7 @@ export const darkTheme: ThemePalette = {
   cancelBtnBg: "#b91c1c",    // red-700
   cancelBtnHover: "#dc2626", // red-600
 
-  plotBg: "#1f2937",             // gray-800, matches bgSecondary card
+  plotBg: "#111827",             // gray-900, distinct from gray-800 card
   plotFont: "#d1d5db",
   plotGridline: "#374151",       // gray-700
 
@@ -136,7 +136,7 @@ export const lightTheme: ThemePalette = {
   cancelBtnBg: "#dc2626",
   cancelBtnHover: "#b91c1c",
 
-  plotBg: "#ffffff",              // white, distinct from gray-50 card
+  plotBg: "#f3f4f6",              // gray-100, distinct from gray-50 card
   plotFont: "#374151",
   plotGridline: "#e5e7eb",       // gray-200
 

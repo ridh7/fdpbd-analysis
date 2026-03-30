@@ -139,6 +139,12 @@ function App() {
 
   const isProcessing = analysis.isProcessing || fitting.isFitting;
 
+  const allSections = ["lens", "detection", "laser", "medium", "transducer", "interface", "sample"];
+  const allCollapsed = allSections.every((s) => form.collapsedSections.has(s));
+  const handleToggleAll = () => {
+    dispatch({ type: allCollapsed ? "EXPAND_ALL" : "COLLAPSE_ALL" });
+  };
+
   const handleFieldChange = (field: keyof IsotropicParams, value: string) => {
     dispatch({ type: "SET_FIELD", field, value });
   };
@@ -191,6 +197,8 @@ function App() {
             activeTab={activeTab}
             onChange={setActiveTab}
             fittingEnabled={fittingEnabled}
+            allCollapsed={allCollapsed}
+            onToggleAll={handleToggleAll}
           />
 
           {activeTab === "forward" ? (

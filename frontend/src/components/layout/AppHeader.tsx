@@ -11,7 +11,7 @@ export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
   return (
     <header className="flex items-center justify-between border-b border-(--border-primary) bg-(--bg-secondary) px-3 py-3">
       <h1 className="text-lg font-semibold text-(--text-primary)">
-        FD-PBD Thermal Analysis
+        Frequency-Domain Photothermal Beam Deflection Analysis
       </h1>
       <button
         type="button"
