@@ -43,3 +43,12 @@ export const AnisotropicResultSchema = z.object({
 
 export type AnisotropicPlotData = z.infer<typeof AnisotropicPlotDataSchema>;
 export type AnisotropicResult = z.infer<typeof AnisotropicResultSchema>;
+
+// Transverse isotropic result (same plot data shape as anisotropic)
+export const TransverseResultSchema = z.object({
+  f_peak: z.number().nullable(),
+  ratio_at_peak: z.number().nullable(),
+  plot_data: AnisotropicPlotDataSchema,
+});
+
+export type TransverseResult = z.infer<typeof TransverseResultSchema>;

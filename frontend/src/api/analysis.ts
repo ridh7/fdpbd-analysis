@@ -1,8 +1,13 @@
 import {
   FDPBDResultSchema,
   AnisotropicResultSchema,
+  TransverseResultSchema,
 } from "../schemas/results";
-import type { FDPBDResult, AnisotropicResult } from "../schemas/results";
+import type {
+  FDPBDResult,
+  AnisotropicResult,
+  TransverseResult,
+} from "../schemas/results";
 import { postMultipart } from "./client";
 
 /**
@@ -30,4 +35,19 @@ export async function analyzeAnisotropic(
     file,
   );
   return AnisotropicResultSchema.parse(raw);
+}
+
+/**
+ * Run transverse isotropic FD-PBD analysis.
+ */
+export async function analyzeTransverse(
+  params: Record<string, unknown>,
+  file: File,
+): Promise<TransverseResult> {
+  const raw = await postMultipart<unknown>(
+    "/fdpbd/analyze_transverse",
+    params,
+    file,
+  );
+  return TransverseResultSchema.parse(raw);
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   FDPBDResultSchema,
   AnisotropicResultSchema,
+  TransverseResultSchema,
 } from "../../schemas/results";
 
 describe("FDPBDResultSchema", () => {
@@ -92,5 +93,44 @@ describe("AnisotropicResultSchema", () => {
         ratio_at_peak: 1.234,
       }),
     ).toThrow();
+  });
+});
+
+describe("TransverseResultSchema", () => {
+  it("accepts valid transverse result", () => {
+    const result = TransverseResultSchema.parse({
+      f_peak: 25000,
+      ratio_at_peak: 2.5,
+      plot_data: {
+        model_freqs: [100, 200],
+        in_model: [0.1, 0.2],
+        out_model: [0.01, 0.02],
+        ratio_model: [10, 10],
+        exp_freqs: [100, 200],
+        in_exp: [0.11, 0.21],
+        out_exp: [0.012, 0.022],
+        ratio_exp: [9.2, 9.5],
+      },
+    });
+    expect(result.f_peak).toBe(25000);
+    expect(result.plot_data.model_freqs).toHaveLength(2);
+  });
+
+  it("accepts null f_peak and ratio_at_peak", () => {
+    const result = TransverseResultSchema.parse({
+      f_peak: null,
+      ratio_at_peak: null,
+      plot_data: {
+        model_freqs: [],
+        in_model: [],
+        out_model: [],
+        ratio_model: [],
+        exp_freqs: [],
+        in_exp: [],
+        out_exp: [],
+        ratio_exp: [],
+      },
+    });
+    expect(result.f_peak).toBeNull();
   });
 });

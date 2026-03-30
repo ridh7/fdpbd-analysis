@@ -1,6 +1,10 @@
-import type { IsotropicParams, AnisotropicExtra } from "../schemas/params";
+import type {
+  IsotropicParams,
+  AnisotropicExtra,
+  TransverseExtra,
+} from "../schemas/params";
 
-export type AnalysisMode = "isotropic" | "anisotropic";
+export type AnalysisMode = "isotropic" | "anisotropic" | "transverse_isotropic";
 
 export const ISOTROPIC_DEFAULTS: IsotropicParams = {
   f_rolloff: "95000",
@@ -44,4 +48,30 @@ export const ANISOTROPIC_DEFAULTS: AnisotropicExtra = {
   C44_0_sample: "1.20", // GPa
   alphaT_perp: "70e-6", // 1/K
   alphaT_para: "60e-6", // 1/K
+};
+
+export const TRANSVERSE_ANISO_DEFAULTS: AnisotropicExtra = {
+  phi: "0",
+  rho: "2.70", // g/cm³
+  alphaT: "23.1e-6", // 1/K
+  C11_0: "107.4", // GPa
+  C12_0: "60.5", // GPa
+  C44_0: "28.3", // GPa
+  lambda_down_x_sample: "0.64", // W/m-K (sigma_r)
+  lambda_down_y_sample: "0.64", // W/m-K (unused, same as x)
+  lambda_down_z_sample: "0.21", // W/m-K (sigma_z)
+  rho_sample: "1.43", // g/cm³
+  C11_0_sample: "8.9", // GPa
+  C12_0_sample: "5.4", // GPa
+  C13_0_sample: "5.4", // GPa
+  C33_0_sample: "5.6", // GPa
+  C44_0_sample: "2.1", // GPa
+  alphaT_perp: "28e-6", // 1/K
+  alphaT_para: "120e-6", // 1/K
+};
+
+export const TRANSVERSE_EXTRA_DEFAULTS: TransverseExtra = {
+  v_sum_fixed: "0.18",
+  c_probe: "0.65",
+  g_int: "100e6",
 };

@@ -2,10 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   buildIsotropicPayload,
   buildAnisotropicPayload,
+  buildTransversePayload,
 } from "../../lib/unitConversions";
 import {
   ISOTROPIC_DEFAULTS,
   ANISOTROPIC_DEFAULTS,
+  TRANSVERSE_ANISO_DEFAULTS,
+  TRANSVERSE_EXTRA_DEFAULTS,
 } from "../../constants/defaults";
 
 describe("buildIsotropicPayload", () => {
@@ -115,5 +118,55 @@ describe("buildAnisotropicPayload", () => {
     expect(payload.lambda_down_x_sample).toBeCloseTo(0.3, 10);
     expect(payload.lambda_down_y_sample).toBeCloseTo(0.5, 10);
     expect(payload.lambda_down_z_sample).toBeCloseTo(0.3, 10);
+  });
+});
+
+describe("buildTransversePayload", () => {
+  const payload = buildTransversePayload(
+    ISOTROPIC_DEFAULTS,
+    TRANSVERSE_ANISO_DEFAULTS,
+    TRANSVERSE_EXTRA_DEFAULTS,
+  );
+
+  it("maps x_offset to r_0 in meters", () => {
+    // 12.60 µm → 12.60e-6 m
+    expect(payload.r_0).toBeCloseTo(12.6e-6, 10);
+    expect(payload).not.toHaveProperty("x_offset");
+  });
+
+  it("maps detector_factor to detector_gain", () => {
+    expect(payload.detector_gain).toBe(74.0);
+    expect(payload).not.toHaveProperty("detector_factor");
+  });
+
+  it("includes transverse-specific fields", () => {
+    expect(payload.v_sum_fixed).toBe(0.18);
+    expect(payload.c_probe).toBe(0.65);
+    expect(payload.g_int).toBe(100e6);
+  });
+
+  it("uses flat layer structure", () => {
+    // Layer 1
+    expect(payload.layer1_thickness).toBeCloseTo(0.07e-6, 12);
+    expect(payload.layer1_sigma).toBe(149.0);
+    expect(payload.layer1_capac).toBeCloseTo(2.44e6, 0);
+    expect(payload.layer1_rho).toBeCloseTo(2700, 0);
+    expect(payload.layer1_C11_0).toBeCloseTo(107.4e9, 0);
+    // Layer 2
+    expect(payload.layer2_sigma_r).toBeCloseTo(0.64, 10);
+    expect(payload.layer2_sigma_z).toBeCloseTo(0.21, 10);
+    expect(payload.layer2_capac).toBeCloseTo(2.73e6, 0);
+    expect(payload.layer2_rho).toBeCloseTo(1430, 0);
+    expect(payload.layer2_C11_0).toBeCloseTo(8.9e9, 0);
+    // Layer 3
+    expect(payload.layer3_sigma).toBe(0.028);
+    expect(payload.layer3_capac).toBe(1192.0);
+  });
+
+  it("does not include anisotropic or isotropic-only fields", () => {
+    expect(payload).not.toHaveProperty("phi");
+    expect(payload).not.toHaveProperty("lambda_down");
+    expect(payload).not.toHaveProperty("eta_down");
+    expect(payload).not.toHaveProperty("niu");
   });
 });

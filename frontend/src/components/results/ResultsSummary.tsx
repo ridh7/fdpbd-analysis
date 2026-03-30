@@ -11,7 +11,11 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
       <h3 className="mb-3 text-sm font-semibold text-gray-200">
         Analysis Results
         <span className="ml-2 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-400">
-          {result.mode === "isotropic" ? "Isotropic" : "Anisotropic"}
+          {result.mode === "isotropic"
+            ? "Isotropic"
+            : result.mode === "anisotropic"
+              ? "Anisotropic"
+              : "Transverse Isotropic"}
         </span>
       </h3>
       {result.mode === "isotropic" ? (

@@ -1,8 +1,13 @@
-import type { FDPBDResult, AnisotropicResult } from "../schemas/results";
+import type {
+  FDPBDResult,
+  AnisotropicResult,
+  TransverseResult,
+} from "../schemas/results";
 
 export type AnalysisResult =
   | { mode: "isotropic"; data: FDPBDResult }
-  | { mode: "anisotropic"; data: AnisotropicResult };
+  | { mode: "anisotropic"; data: AnisotropicResult }
+  | { mode: "transverse_isotropic"; data: TransverseResult };
 
 export interface AnalysisState {
   result: AnalysisResult | null;

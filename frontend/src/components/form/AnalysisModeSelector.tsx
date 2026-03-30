@@ -9,6 +9,7 @@ interface AnalysisModeSelectorProps {
 const MODES: { value: AnalysisMode; label: string }[] = [
   { value: "isotropic", label: "Isotropic" },
   { value: "anisotropic", label: "Anisotropic" },
+  { value: "transverse_isotropic", label: "Transverse" },
 ];
 
 export function AnalysisModeSelector({

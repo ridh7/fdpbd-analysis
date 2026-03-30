@@ -8,6 +8,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from app.dependencies import get_analysis_service
 from app.models.anisotropic import AnisotropicFDPBDParams, AnisotropicFDPBDResult
 from app.models.isotropic import FDPBDParams, FDPBDResult
+from app.models.transverse_isotropic import (
+    TransverseIsotropicParams,
+    TransverseIsotropicResult,
+)
 from app.services.analysis_service import AnalysisService
 
 router = APIRouter(prefix="/fdpbd", tags=["analysis"])
@@ -68,3 +72,23 @@ async def analyze_anisotropic(
 
     content = await file.read()
     return await service.run_anisotropic(validated_params, content)
+
+
+@router.post("/analyze_transverse", response_model=TransverseIsotropicResult)
+async def analyze_transverse(
+    params: str = Form(...),
+    file: UploadFile = File(...),
+    service: AnalysisService = Depends(get_analysis_service),
+) -> TransverseIsotropicResult:
+    """Run transverse isotropic FD-PBD analysis with uploaded data file."""
+    params_dict = _parse_params(params)
+
+    try:
+        validated_params = TransverseIsotropicParams(**params_dict)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail=f"Parameter validation failed: {e}"
+        ) from e
+
+    content = await file.read()
+    return await service.run_transverse_isotropic(validated_params, content)

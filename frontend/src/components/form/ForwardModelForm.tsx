@@ -1,4 +1,8 @@
-import type { IsotropicParams, AnisotropicExtra } from "../../schemas/params";
+import type {
+  IsotropicParams,
+  AnisotropicExtra,
+  TransverseExtra,
+} from "../../schemas/params";
 import type {
   LensOption,
   MediumOption,
@@ -13,12 +17,14 @@ import { TransducerElasticSection } from "./sections/TransducerElasticSection";
 import { InterfaceSection } from "./sections/InterfaceSection";
 import { SampleSection } from "./sections/SampleSection";
 import { AnisotropicSampleSection } from "./sections/AnisotropicSampleSection";
+import { TransverseDetectionSection } from "./sections/TransverseDetectionSection";
 import { MediumSection } from "./sections/MediumSection";
 
 interface ForwardModelFormProps {
   analysisMode: AnalysisMode;
   params: IsotropicParams;
   anisotropicParams: AnisotropicExtra;
+  transverseParams: TransverseExtra;
   lensOption: LensOption;
   mediumOption: MediumOption;
   laserOption: LaserOption;
@@ -30,6 +36,10 @@ interface ForwardModelFormProps {
     value: string,
   ) => void;
   onAnisoFieldChange: (field: keyof AnisotropicExtra, value: string) => void;
+  onTransverseFieldChange: (
+    field: keyof TransverseExtra,
+    value: string,
+  ) => void;
   onLensChange: (option: LensOption) => void;
   onMediumChange: (option: MediumOption) => void;
   onLaserChange: (option: LaserOption) => void;
@@ -41,6 +51,7 @@ export function ForwardModelForm({
   analysisMode,
   params,
   anisotropicParams,
+  transverseParams,
   lensOption,
   mediumOption,
   laserOption,
@@ -48,13 +59,16 @@ export function ForwardModelForm({
   onFieldChange,
   onArrayFieldChange,
   onAnisoFieldChange,
+  onTransverseFieldChange,
   onLensChange,
   onMediumChange,
   onLaserChange,
   onToggleSection,
   disabled,
 }: ForwardModelFormProps) {
-  const isAnisotropic = analysisMode === "anisotropic";
+  const isIsotropic = analysisMode === "isotropic";
+  const showElasticSections =
+    analysisMode === "anisotropic" || analysisMode === "transverse_isotropic";
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -86,6 +100,20 @@ export function ForwardModelForm({
         />
       </AccordionSection>
 
+      {analysisMode === "transverse_isotropic" && (
+        <AccordionSection
+          title="Detection / Boundary"
+          isCollapsed={collapsedSections.has("detection")}
+          onToggle={() => onToggleSection("detection")}
+        >
+          <TransverseDetectionSection
+            params={transverseParams}
+            onFieldChange={onTransverseFieldChange}
+            disabled={disabled}
+          />
+        </AccordionSection>
+      )}
+
       <AccordionSection
         title="Transducer (Layer 1)"
         isCollapsed={collapsedSections.has("transducer")}
@@ -97,7 +125,7 @@ export function ForwardModelForm({
           onArrayFieldChange={onArrayFieldChange}
           disabled={disabled}
         />
-        {isAnisotropic && (
+        {showElasticSections && (
           <>
             <div className="my-2 border-t border-gray-700" />
             <TransducerElasticSection
@@ -109,7 +137,7 @@ export function ForwardModelForm({
         )}
       </AccordionSection>
 
-      {!isAnisotropic && (
+      {isIsotropic && (
         <AccordionSection
           title="Interface (Layer 2)"
           isCollapsed={collapsedSections.has("interface")}
@@ -125,14 +153,16 @@ export function ForwardModelForm({
 
       <AccordionSection
         title={
-          isAnisotropic
-            ? "Sample (Anisotropic)"
-            : "Sample / Substrate (Layer 3)"
+          isIsotropic
+            ? "Sample / Substrate (Layer 3)"
+            : analysisMode === "transverse_isotropic"
+              ? "Sample (Transverse Isotropic)"
+              : "Sample (Anisotropic)"
         }
         isCollapsed={collapsedSections.has("sample")}
         onToggle={() => onToggleSection("sample")}
       >
-        {isAnisotropic ? (
+        {showElasticSections ? (
           <AnisotropicSampleSection
             params={anisotropicParams}
             sharedParams={params}
@@ -150,7 +180,7 @@ export function ForwardModelForm({
         )}
       </AccordionSection>
 
-      {!isAnisotropic && (
+      {isIsotropic && (
         <AccordionSection
           title="Medium (Above Sample)"
           isCollapsed={collapsedSections.has("medium")}

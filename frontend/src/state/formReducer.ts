@@ -1,13 +1,23 @@
-import type { IsotropicParams, AnisotropicExtra } from "../schemas/params";
+import type {
+  IsotropicParams,
+  AnisotropicExtra,
+  TransverseExtra,
+} from "../schemas/params";
 import type { LensOption, MediumOption, LaserOption } from "../constants/presets";
 import type { AnalysisMode } from "../constants/defaults";
-import { ISOTROPIC_DEFAULTS, ANISOTROPIC_DEFAULTS } from "../constants/defaults";
+import {
+  ISOTROPIC_DEFAULTS,
+  ANISOTROPIC_DEFAULTS,
+  TRANSVERSE_ANISO_DEFAULTS,
+  TRANSVERSE_EXTRA_DEFAULTS,
+} from "../constants/defaults";
 import { LENS_PRESETS, MEDIUM_PRESETS, LASER_PRESETS } from "../constants/presets";
 
 export interface FormState {
   analysisMode: AnalysisMode;
   params: IsotropicParams;
   anisotropicParams: AnisotropicExtra;
+  transverseParams: TransverseExtra;
   file: File | null;
   lensOption: LensOption;
   mediumOption: MediumOption;
@@ -24,6 +34,11 @@ export type FormAction =
       value: string;
     }
   | { type: "SET_ANISO_FIELD"; field: keyof AnisotropicExtra; value: string }
+  | {
+      type: "SET_TRANSVERSE_FIELD";
+      field: keyof TransverseExtra;
+      value: string;
+    }
   | { type: "SET_MODE"; mode: AnalysisMode }
   | { type: "SET_FILE"; file: File | null }
   | { type: "SET_LENS_OPTION"; option: LensOption }
@@ -36,6 +51,7 @@ export const initialFormState: FormState = {
   analysisMode: "isotropic",
   params: ISOTROPIC_DEFAULTS,
   anisotropicParams: ANISOTROPIC_DEFAULTS,
+  transverseParams: TRANSVERSE_EXTRA_DEFAULTS,
   file: null,
   lensOption: "5x",
   mediumOption: "air",
@@ -69,8 +85,37 @@ export function formReducer(state: FormState, action: FormAction): FormState {
         },
       };
 
-    case "SET_MODE":
+    case "SET_TRANSVERSE_FIELD":
+      return {
+        ...state,
+        transverseParams: {
+          ...state.transverseParams,
+          [action.field]: action.value,
+        },
+      };
+
+    case "SET_MODE": {
+      // When switching to transverse, apply transverse-specific aniso defaults
+      if (action.mode === "transverse_isotropic") {
+        return {
+          ...state,
+          analysisMode: action.mode,
+          anisotropicParams: TRANSVERSE_ANISO_DEFAULTS,
+        };
+      }
+      // When switching to anisotropic, restore anisotropic defaults
+      if (
+        action.mode === "anisotropic" &&
+        state.analysisMode === "transverse_isotropic"
+      ) {
+        return {
+          ...state,
+          analysisMode: action.mode,
+          anisotropicParams: ANISOTROPIC_DEFAULTS,
+        };
+      }
       return { ...state, analysisMode: action.mode };
+    }
 
     case "SET_FILE":
       return { ...state, file: action.file };

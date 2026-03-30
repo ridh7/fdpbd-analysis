@@ -9,7 +9,11 @@ import { ForwardModelForm } from "./components/form/ForwardModelForm";
 import { ActionBar } from "./components/form/ActionBar";
 import { ResultsSummary } from "./components/results/ResultsSummary";
 import { PlotPanel } from "./components/results/PlotPanel";
-import type { IsotropicParams, AnisotropicExtra } from "./schemas/params";
+import type {
+  IsotropicParams,
+  AnisotropicExtra,
+  TransverseExtra,
+} from "./schemas/params";
 
 function App() {
   const [form, dispatch] = useReducer(formReducer, initialFormState);
@@ -24,7 +28,6 @@ function App() {
       p.w_rms,
       p.x_offset,
       p.incident_pump,
-      p.incident_probe,
       p.n_al,
       p.k_al,
       p.lens_transmittance,
@@ -41,6 +44,7 @@ function App() {
     if (form.analysisMode === "isotropic") {
       return (
         baseValid &&
+        isValidDecimal(p.incident_probe) &&
         isValidDecimal(p.niu) &&
         isValidDecimal(p.alpha_t) &&
         isValidDecimal(p.lambda_up) &&
@@ -51,14 +55,20 @@ function App() {
       );
     }
 
-    // Anisotropic: validate extra fields
+    // Anisotropic and transverse: validate extra fields
     const a = form.anisotropicParams;
-    return (
+    const anisoValid =
       baseValid &&
       isValidDecimal(p.lambda_up) &&
       isValidDecimal(p.c_up) &&
-      Object.values(a).every(isValidDecimal)
-    );
+      Object.values(a).every(isValidDecimal);
+
+    if (form.analysisMode === "transverse_isotropic") {
+      const t = form.transverseParams;
+      return anisoValid && Object.values(t).every(isValidDecimal);
+    }
+
+    return anisoValid;
   };
 
   const handleRun = () => {
@@ -67,6 +77,7 @@ function App() {
         form.analysisMode,
         form.params,
         form.anisotropicParams,
+        form.transverseParams,
         form.file,
       );
     }
@@ -96,6 +107,13 @@ function App() {
     dispatch({ type: "SET_ANISO_FIELD", field, value });
   };
 
+  const handleTransverseFieldChange = (
+    field: keyof TransverseExtra,
+    value: string,
+  ) => {
+    dispatch({ type: "SET_TRANSVERSE_FIELD", field, value });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gray-900 text-white">
       <AppHeader />
@@ -120,6 +138,7 @@ function App() {
             analysisMode={form.analysisMode}
             params={form.params}
             anisotropicParams={form.anisotropicParams}
+            transverseParams={form.transverseParams}
             lensOption={form.lensOption}
             mediumOption={form.mediumOption}
             laserOption={form.laserOption}
@@ -127,6 +146,7 @@ function App() {
             onFieldChange={handleFieldChange}
             onArrayFieldChange={handleArrayFieldChange}
             onAnisoFieldChange={handleAnisoFieldChange}
+            onTransverseFieldChange={handleTransverseFieldChange}
             onLensChange={(opt) =>
               dispatch({ type: "SET_LENS_OPTION", option: opt })
             }

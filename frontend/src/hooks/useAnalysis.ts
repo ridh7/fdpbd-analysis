@@ -3,12 +3,21 @@ import {
   analysisReducer,
   initialAnalysisState,
 } from "../state/analysisReducer";
-import { analyzeIsotropic, analyzeAnisotropic } from "../api/analysis";
+import {
+  analyzeIsotropic,
+  analyzeAnisotropic,
+  analyzeTransverse,
+} from "../api/analysis";
 import {
   buildIsotropicPayload,
   buildAnisotropicPayload,
+  buildTransversePayload,
 } from "../lib/unitConversions";
-import type { IsotropicParams, AnisotropicExtra } from "../schemas/params";
+import type {
+  IsotropicParams,
+  AnisotropicExtra,
+  TransverseExtra,
+} from "../schemas/params";
 import type { AnalysisMode } from "../constants/defaults";
 
 export function useAnalysis() {
@@ -19,6 +28,7 @@ export function useAnalysis() {
       mode: AnalysisMode,
       params: IsotropicParams,
       anisotropicParams: AnisotropicExtra,
+      transverseParams: TransverseExtra,
       file: File,
     ) => {
       dispatch({ type: "START" });
@@ -34,13 +44,26 @@ export function useAnalysis() {
             result: { mode: "isotropic", data: result },
             timeTaken,
           });
-        } else {
+        } else if (mode === "anisotropic") {
           const payload = buildAnisotropicPayload(params, anisotropicParams);
           const result = await analyzeAnisotropic(payload, file);
           const timeTaken = (performance.now() - startTime) / 1000;
           dispatch({
             type: "SUCCESS",
             result: { mode: "anisotropic", data: result },
+            timeTaken,
+          });
+        } else {
+          const payload = buildTransversePayload(
+            params,
+            anisotropicParams,
+            transverseParams,
+          );
+          const result = await analyzeTransverse(payload, file);
+          const timeTaken = (performance.now() - startTime) / 1000;
+          dispatch({
+            type: "SUCCESS",
+            result: { mode: "transverse_isotropic", data: result },
             timeTaken,
           });
         }

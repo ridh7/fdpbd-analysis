@@ -71,3 +71,15 @@ export const AnisotropicExtraSchema = z.object({
 });
 
 export type AnisotropicExtra = z.infer<typeof AnisotropicExtraSchema>;
+
+/**
+ * Additional fields for transverse isotropic mode.
+ * These are on top of the shared AnisotropicExtra fields.
+ */
+export const TransverseExtraSchema = z.object({
+  v_sum_fixed: z.string().min(1),
+  c_probe: z.string().min(1),
+  g_int: z.string().min(1),
+});
+
+export type TransverseExtra = z.infer<typeof TransverseExtraSchema>;
