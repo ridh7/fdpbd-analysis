@@ -1,10 +1,11 @@
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { formReducer, initialFormState } from "./state/formReducer";
 import { useAnalysis } from "./hooks/useAnalysis";
 import { useFitting } from "./hooks/useFitting";
 import { useTheme } from "./hooks/useTheme";
 import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
 import { AppHeader } from "./components/layout/AppHeader";
+import { Button } from "./components/ui/Button";
 import { FileUpload } from "./components/form/FileUpload";
 import { AnalysisModeSelector } from "./components/form/AnalysisModeSelector";
 import { ForwardModelForm } from "./components/form/ForwardModelForm";
@@ -35,17 +36,20 @@ function App() {
   const [fitConfig, setFitConfig] = useState<FitConfigState>(DEFAULT_FIT_CONFIG);
 
   const fittingEnabled =
-    form.analysisMode === "anisotropic" ||
-    form.analysisMode === "transverse_isotropic";
+    form.analysisMode === "anisotropic" || form.analysisMode === "transverse_isotropic";
   const fittableParams =
     form.analysisMode === "transverse_isotropic"
       ? TRANS_FITTABLE_PARAMS
       : ANISO_FITTABLE_PARAMS;
 
-  const handleFitConfigChange = (
-    field: keyof FitConfigState,
-    value: string,
-  ) => {
+  // Reset to forward tab when switching to a mode that doesn't support fitting
+  useEffect(() => {
+    if (!fittingEnabled) {
+      setActiveTab("forward");
+    }
+  }, [fittingEnabled]);
+
+  const handleFitConfigChange = (field: keyof FitConfigState, value: string) => {
     setFitConfig((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -139,7 +143,15 @@ function App() {
 
   const isProcessing = analysis.isProcessing || fitting.isFitting;
 
-  const allSections = ["lens", "detection", "laser", "medium", "transducer", "interface", "sample"];
+  const allSections = [
+    "lens",
+    "detection",
+    "laser",
+    "medium",
+    "transducer",
+    "interface",
+    "sample",
+  ];
   const allCollapsed = allSections.every((s) => form.collapsedSections.has(s));
   const handleToggleAll = () => {
     dispatch({ type: allCollapsed ? "EXPAND_ALL" : "COLLAPSE_ALL" });
@@ -157,17 +169,11 @@ function App() {
     dispatch({ type: "SET_ARRAY_FIELD", field, index, value });
   };
 
-  const handleAnisoFieldChange = (
-    field: keyof AnisotropicExtra,
-    value: string,
-  ) => {
+  const handleAnisoFieldChange = (field: keyof AnisotropicExtra, value: string) => {
     dispatch({ type: "SET_ANISO_FIELD", field, value });
   };
 
-  const handleTransverseFieldChange = (
-    field: keyof TransverseExtra,
-    value: string,
-  ) => {
+  const handleTransverseFieldChange = (field: keyof TransverseExtra, value: string) => {
     dispatch({ type: "SET_TRANSVERSE_FIELD", field, value });
   };
 
@@ -215,22 +221,18 @@ function App() {
               onArrayFieldChange={handleArrayFieldChange}
               onAnisoFieldChange={handleAnisoFieldChange}
               onTransverseFieldChange={handleTransverseFieldChange}
-              onLensChange={(opt) =>
-                dispatch({ type: "SET_LENS_OPTION", option: opt })
-              }
+              onLensChange={(opt) => dispatch({ type: "SET_LENS_OPTION", option: opt })}
               onMediumChange={(opt) =>
                 dispatch({ type: "SET_MEDIUM_OPTION", option: opt })
               }
               onLaserChange={(opt) =>
                 dispatch({ type: "SET_LASER_OPTION", option: opt })
               }
-              onToggleSection={(s) =>
-                dispatch({ type: "TOGGLE_SECTION", section: s })
-              }
+              onToggleSection={(s) => dispatch({ type: "TOGGLE_SECTION", section: s })}
               disabled={isProcessing}
             />
           ) : (
-            <div className="flex-1 overflow-y-auto p-3">
+            <div className="mt-3 flex-1 overflow-y-auto px-3 pb-3">
               <div className="rounded-lg border border-(--border-primary) bg-(--bg-secondary) p-3">
                 <FitConfigForm
                   config={fitConfig}
@@ -248,6 +250,7 @@ function App() {
             onClear={handleClear}
             isProcessing={isProcessing}
             isValid={isFormValid()}
+            isFitting={activeTab === "fitting"}
           />
         </div>
 
@@ -256,7 +259,7 @@ function App() {
           {/* Status indicator */}
           {analysis.status && (
             <div
-              className={`mb-3 rounded px-3 py-1.5 text-sm ${
+              className={`mb-3 flex items-center justify-between rounded px-3 py-1.5 text-sm ${
                 analysis.error
                   ? "bg-(--status-error-bg) text-(--status-error-text)"
                   : analysis.isProcessing
@@ -284,10 +287,7 @@ function App() {
           {/* Forward model results */}
           {analysis.result && (
             <>
-              <ResultsSummary
-                result={analysis.result}
-                timeTaken={analysis.timeTaken}
-              />
+              <ResultsSummary result={analysis.result} timeTaken={analysis.timeTaken} />
               <div className="mt-3 min-h-0 flex-1">
                 <PlotPanel data={analysis.result.data.plot_data} theme={theme} />
               </div>
@@ -315,9 +315,19 @@ function App() {
 
           {!analysis.result && !fitting.result && !isProcessing && (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-(--text-muted)">
-                Upload a data file and click "Run Analysis" to see results.
-              </p>
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-(--text-muted)">
+                  {form.file
+                    ? 'Click "Run Analysis" to see results.'
+                    : 'Upload a data file and click "Run Analysis" to see results.'}
+                </p>
+                {!form.file && (
+                  <FileUpload
+                    file={form.file}
+                    onFileChange={(f) => dispatch({ type: "SET_FILE", file: f })}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>

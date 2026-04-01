@@ -71,7 +71,7 @@ export function ForwardModelForm({
     analysisMode === "anisotropic" || analysisMode === "transverse_isotropic";
 
   return (
-    <div className="flex-1 space-y-2 overflow-y-auto p-3">
+    <div className="mt-3 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
       <AccordionSection
         title="Lens / Optics"
         isCollapsed={collapsedSections.has("lens")}

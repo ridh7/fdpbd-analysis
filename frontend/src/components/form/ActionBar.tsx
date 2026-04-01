@@ -6,6 +6,7 @@ interface ActionBarProps {
   onClear: () => void;
   isProcessing: boolean;
   isValid: boolean;
+  isFitting?: boolean;
 }
 
 export function ActionBar({
@@ -14,7 +15,14 @@ export function ActionBar({
   onClear,
   isProcessing,
   isValid,
+  isFitting,
 }: ActionBarProps) {
+  const label = isProcessing
+    ? "Processing..."
+    : isFitting
+      ? "Run Fit"
+      : "Run Analysis";
+
   return (
     <div className="flex gap-3 border-t border-(--border-primary) p-3">
       <Button
@@ -23,7 +31,7 @@ export function ActionBar({
         disabled={isProcessing || !isValid}
         className="flex-1"
       >
-        {isProcessing ? "Processing..." : "Run Analysis"}
+        {label}
       </Button>
       <Button variant="secondary" onClick={onClear} disabled={isProcessing}>
         Clear
