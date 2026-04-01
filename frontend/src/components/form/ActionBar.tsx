@@ -17,11 +17,7 @@ export function ActionBar({
   isValid,
   isFitting,
 }: ActionBarProps) {
-  const label = isProcessing
-    ? "Processing..."
-    : isFitting
-      ? "Run Fit"
-      : "Run Analysis";
+  const label = isProcessing ? "Processing..." : isFitting ? "Run Fit" : "Run Analysis";
 
   return (
     <div className="flex gap-3 border-t border-(--border-primary) p-3">

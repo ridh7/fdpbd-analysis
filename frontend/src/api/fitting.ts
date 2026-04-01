@@ -1,7 +1,4 @@
-import {
-  FitProgressSchema,
-  FitResultSchema,
-} from "../schemas/results";
+import { FitProgressSchema, FitResultSchema } from "../schemas/results";
 import type { FitProgress, FitResultData } from "../schemas/results";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -33,9 +30,7 @@ export async function* streamFit(
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(
-      body?.detail ?? `Request failed with status ${response.status}`,
-    );
+    throw new Error(body?.detail ?? `Request failed with status ${response.status}`);
   }
 
   const reader = response.body?.getReader();

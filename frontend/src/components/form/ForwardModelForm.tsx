@@ -3,11 +3,7 @@ import type {
   AnisotropicExtra,
   TransverseExtra,
 } from "../../schemas/params";
-import type {
-  LensOption,
-  MediumOption,
-  LaserOption,
-} from "../../constants/presets";
+import type { LensOption, MediumOption, LaserOption } from "../../constants/presets";
 import type { AnalysisMode } from "../../constants/defaults";
 import { AccordionSection } from "./AccordionSection";
 import { LaserSection } from "./sections/LaserSection";
@@ -36,10 +32,7 @@ interface ForwardModelFormProps {
     value: string,
   ) => void;
   onAnisoFieldChange: (field: keyof AnisotropicExtra, value: string) => void;
-  onTransverseFieldChange: (
-    field: keyof TransverseExtra,
-    value: string,
-  ) => void;
+  onTransverseFieldChange: (field: keyof TransverseExtra, value: string) => void;
   onLensChange: (option: LensOption) => void;
   onMediumChange: (option: MediumOption) => void;
   onLaserChange: (option: LaserOption) => void;

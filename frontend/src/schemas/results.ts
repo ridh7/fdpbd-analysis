@@ -10,7 +10,7 @@ export const PlotDataSchema = z.object({
   delta_ratio: z.array(z.number()),
 });
 
-export const FDPBDResultSchema = z.object({
+export const IsotropicResultSchema = z.object({
   lambda_measure: z.number(),
   alpha_t_fitted: z.number(),
   t_ss_heat: z.number(),
@@ -18,7 +18,7 @@ export const FDPBDResultSchema = z.object({
 });
 
 export type PlotData = z.infer<typeof PlotDataSchema>;
-export type FDPBDResult = z.infer<typeof FDPBDResultSchema>;
+export type IsotropicResult = z.infer<typeof IsotropicResultSchema>;
 
 // Anisotropic result schemas
 export const AnisotropicPlotDataSchema = z.object({

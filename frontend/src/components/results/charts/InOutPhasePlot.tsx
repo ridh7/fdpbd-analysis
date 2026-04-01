@@ -91,7 +91,11 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
       data={traces}
       layout={{
         title: { text: "In-Phase / Out-of-Phase Signal" },
-        xaxis: { title: { text: "Frequency (Hz)" }, type: "log", gridcolor: palette.plotGridline },
+        xaxis: {
+          title: { text: "Frequency (Hz)" },
+          type: "log",
+          gridcolor: palette.plotGridline,
+        },
         yaxis: { title: { text: "Signal (V)" }, gridcolor: palette.plotGridline },
         paper_bgcolor: "transparent",
         plot_bgcolor: palette.plotBg,

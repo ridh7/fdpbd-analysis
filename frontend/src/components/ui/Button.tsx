@@ -13,7 +13,8 @@ const variantClasses: Record<ButtonVariant, { base: string; disabled: string }> 
   },
   secondary: {
     base: "border border-(--border-primary) text-(--text-secondary) hover:bg-(--bg-tertiary)",
-    disabled: "cursor-not-allowed border border-(--border-primary) text-(--text-muted) opacity-50",
+    disabled:
+      "cursor-not-allowed border border-(--border-primary) text-(--text-muted) opacity-50",
   },
   danger: {
     base: "bg-(--cancel-btn-bg) text-white hover:bg-(--cancel-btn-hover)",

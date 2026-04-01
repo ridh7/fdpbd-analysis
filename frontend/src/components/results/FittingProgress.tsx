@@ -62,11 +62,10 @@ export function FittingProgress({
   if (isFitting && !progress) {
     return (
       <div className="space-y-2 rounded bg-(--status-info-bg) px-3 py-3 text-sm text-(--status-info-text)">
-        <div className="font-medium">
-          Starting DE fitting...
-        </div>
+        <div className="font-medium">Starting DE fitting...</div>
         <div className="text-xs text-(--text-muted)">
-          Evaluating initial population. First progress update will appear after generation 1 completes.
+          Evaluating initial population. First progress update will appear after
+          generation 1 completes.
         </div>
         {/* Indeterminate sliding progress bar */}
         <div className="h-2 overflow-hidden rounded-full bg-(--progress-bar-bg)">
@@ -100,15 +99,9 @@ export function FittingProgress({
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-xs text-(--text-muted)">
-        <span>
-          Best: {progress.best_value.toExponential(4)}
-        </span>
-        <span>
-          Conv: {progress.convergence.toExponential(2)}
-        </span>
-        <span>
-          Elapsed: {progress.elapsed_s.toFixed(1)}s
-        </span>
+        <span>Best: {progress.best_value.toExponential(4)}</span>
+        <span>Conv: {progress.convergence.toExponential(2)}</span>
+        <span>Elapsed: {progress.elapsed_s.toFixed(1)}s</span>
       </div>
     </div>
   );

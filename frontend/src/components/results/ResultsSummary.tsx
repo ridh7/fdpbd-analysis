@@ -40,11 +40,7 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
         <div className="grid grid-cols-2 gap-3">
           <ResultItem
             label="Peak Frequency"
-            value={
-              result.data.f_peak != null
-                ? result.data.f_peak.toFixed(0)
-                : "N/A"
-            }
+            value={result.data.f_peak != null ? result.data.f_peak.toFixed(0) : "N/A"}
             unit="Hz"
           />
           <ResultItem
@@ -79,8 +75,7 @@ function ResultItem({
     <div>
       <div className="text-xs text-(--text-muted)">{label}</div>
       <div className="text-lg font-medium text-(--text-primary)">
-        {value}{" "}
-        {unit && <span className="text-sm text-(--text-muted)">{unit}</span>}
+        {value} {unit && <span className="text-sm text-(--text-muted)">{unit}</span>}
       </div>
     </div>
   );

@@ -59,7 +59,11 @@ export function RatioPlot({ data, theme }: RatioPlotProps) {
       data={traces}
       layout={{
         title: { text: "-V_in / V_out Ratio" },
-        xaxis: { title: { text: "Frequency (Hz)" }, type: "log", gridcolor: palette.plotGridline },
+        xaxis: {
+          title: { text: "Frequency (Hz)" },
+          type: "log",
+          gridcolor: palette.plotGridline,
+        },
         yaxis: { title: { text: "Ratio" }, gridcolor: palette.plotGridline },
         paper_bgcolor: "transparent",
         plot_bgcolor: palette.plotBg,

@@ -64,10 +64,7 @@ describe("buildIsotropicPayload", () => {
 });
 
 describe("buildAnisotropicPayload", () => {
-  const payload = buildAnisotropicPayload(
-    ISOTROPIC_DEFAULTS,
-    ANISOTROPIC_DEFAULTS,
-  );
+  const payload = buildAnisotropicPayload(ISOTROPIC_DEFAULTS, ANISOTROPIC_DEFAULTS);
 
   it("converts rho from g/cm³ to kg/m³", () => {
     // 2.70 g/cm³ → 2700 kg/m³
@@ -88,7 +85,7 @@ describe("buildAnisotropicPayload", () => {
 
   it("converts sample elastic constants from GPa to Pa", () => {
     expect(payload.C11_0_sample).toBeCloseTo(12.11e9, 0);
-    expect(payload.C44_0_sample).toBeCloseTo(1.20e9, 0);
+    expect(payload.C44_0_sample).toBeCloseTo(1.2e9, 0);
   });
 
   it("sends only transducer layer for lambda_down and h_down", () => {

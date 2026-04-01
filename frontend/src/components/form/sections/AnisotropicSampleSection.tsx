@@ -5,11 +5,7 @@ interface AnisotropicSampleSectionProps {
   params: AnisotropicExtra;
   sharedParams: IsotropicParams;
   onFieldChange: (field: keyof AnisotropicExtra, value: string) => void;
-  onArrayFieldChange: (
-    field: "c_down",
-    index: number,
-    value: string,
-  ) => void;
+  onArrayFieldChange: (field: "c_down", index: number, value: string) => void;
   disabled?: boolean;
 }
 
@@ -22,9 +18,7 @@ export function AnisotropicSampleSection({
 }: AnisotropicSampleSectionProps) {
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-medium text-(--text-muted)">
-        Thermal Properties
-      </h4>
+      <h4 className="text-xs font-medium text-(--text-muted)">Thermal Properties</h4>
       <ParamInput
         label="C (heat capacity)"
         value={sharedParams.c_down[2]}

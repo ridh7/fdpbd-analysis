@@ -5,7 +5,6 @@ import { useFitting } from "./hooks/useFitting";
 import { useTheme } from "./hooks/useTheme";
 import { isValidDecimal, areAllValidDecimals } from "./lib/validation";
 import { AppHeader } from "./components/layout/AppHeader";
-import { Button } from "./components/ui/Button";
 import { FileUpload } from "./components/form/FileUpload";
 import { AnalysisModeSelector } from "./components/form/AnalysisModeSelector";
 import { ForwardModelForm } from "./components/form/ForwardModelForm";
@@ -130,13 +129,13 @@ function App() {
   };
 
   const handleReset = () => {
-    dispatch({ type: "CLEAR" });
+    dispatch({ type: "RESET" });
     analysis.reset();
     fitting.resetFit();
   };
 
   const handleClear = () => {
-    dispatch({ type: "CLEAR_VALUES" });
+    dispatch({ type: "CLEAR" });
     analysis.reset();
     fitting.resetFit();
   };

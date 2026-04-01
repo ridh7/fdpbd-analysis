@@ -88,15 +88,35 @@ export const ANISO_FITTABLE_PARAMS: FittableParam[] = [
   { key: "sigma_x", label: "sigma_x (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
   { key: "sigma_y", label: "sigma_y (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
   { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
-  { key: "alphaT_perp", label: "CTE perp (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
-  { key: "alphaT_para", label: "CTE para (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+  {
+    key: "alphaT_perp",
+    label: "CTE perp (1/K)",
+    defaultMin: "1e-6",
+    defaultMax: "200e-6",
+  },
+  {
+    key: "alphaT_para",
+    label: "CTE para (1/K)",
+    defaultMin: "1e-6",
+    defaultMax: "200e-6",
+  },
 ];
 
 export const TRANS_FITTABLE_PARAMS: FittableParam[] = [
   { key: "sigma_r", label: "sigma_r (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
   { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
-  { key: "alphaT_perp", label: "CTE perp (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
-  { key: "alphaT_para", label: "CTE para (1/K)", defaultMin: "1e-6", defaultMax: "200e-6" },
+  {
+    key: "alphaT_perp",
+    label: "CTE perp (1/K)",
+    defaultMin: "1e-6",
+    defaultMax: "200e-6",
+  },
+  {
+    key: "alphaT_para",
+    label: "CTE para (1/K)",
+    defaultMin: "1e-6",
+    defaultMax: "200e-6",
+  },
 ];
 
 export interface FitConfigState {

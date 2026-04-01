@@ -47,8 +47,8 @@ export type FormAction =
   | { type: "TOGGLE_SECTION"; section: string }
   | { type: "COLLAPSE_ALL" }
   | { type: "EXPAND_ALL" }
-  | { type: "CLEAR" }
-  | { type: "CLEAR_VALUES" };
+  | { type: "RESET" }
+  | { type: "CLEAR" };
 
 export const initialFormState: FormState = {
   analysisMode: "isotropic",
@@ -62,29 +62,56 @@ export const initialFormState: FormState = {
   collapsedSections: new Set<string>(),
 };
 
-const LENS_FIELDS = ["w_rms", "x_offset", "lens_transmittance", "detector_factor"] as const;
+const LENS_FIELDS = [
+  "w_rms",
+  "x_offset",
+  "lens_transmittance",
+  "detector_factor",
+] as const;
 const MEDIUM_FIELDS = ["lambda_up", "eta_up", "c_up", "h_up"] as const;
-const LASER_FIELDS = ["f_rolloff", "delay_1", "delay_2", "incident_pump", "incident_probe"] as const;
+const LASER_FIELDS = [
+  "f_rolloff",
+  "delay_1",
+  "delay_2",
+  "incident_pump",
+  "incident_probe",
+] as const;
 
 function detectPresetChange(
   field: string,
   newParams: IsotropicParams,
 ): { lensOption?: LensOption; mediumOption?: MediumOption; laserOption?: LaserOption } {
-  const result: { lensOption?: LensOption; mediumOption?: MediumOption; laserOption?: LaserOption } = {};
+  const result: {
+    lensOption?: LensOption;
+    mediumOption?: MediumOption;
+    laserOption?: LaserOption;
+  } = {};
 
   if ((LENS_FIELDS as readonly string[]).includes(field)) {
-    const matchingPreset = (Object.entries(LENS_PRESETS) as [Exclude<LensOption, "custom">, Record<string, string>][])
-      .find(([, preset]) => LENS_FIELDS.every((f) => newParams[f] === preset[f]));
+    const matchingPreset = (
+      Object.entries(LENS_PRESETS) as [
+        Exclude<LensOption, "custom">,
+        Record<string, string>,
+      ][]
+    ).find(([, preset]) => LENS_FIELDS.every((f) => newParams[f] === preset[f]));
     result.lensOption = matchingPreset ? matchingPreset[0] : "custom";
   }
   if ((MEDIUM_FIELDS as readonly string[]).includes(field)) {
-    const matchingPreset = (Object.entries(MEDIUM_PRESETS) as [Exclude<MediumOption, "custom">, Record<string, string>][])
-      .find(([, preset]) => MEDIUM_FIELDS.every((f) => newParams[f] === preset[f]));
+    const matchingPreset = (
+      Object.entries(MEDIUM_PRESETS) as [
+        Exclude<MediumOption, "custom">,
+        Record<string, string>,
+      ][]
+    ).find(([, preset]) => MEDIUM_FIELDS.every((f) => newParams[f] === preset[f]));
     result.mediumOption = matchingPreset ? matchingPreset[0] : "custom";
   }
   if ((LASER_FIELDS as readonly string[]).includes(field)) {
-    const matchingPreset = (Object.entries(LASER_PRESETS) as [Exclude<LaserOption, "custom">, Record<string, string>][])
-      .find(([, preset]) => LASER_FIELDS.every((f) => newParams[f] === preset[f]));
+    const matchingPreset = (
+      Object.entries(LASER_PRESETS) as [
+        Exclude<LaserOption, "custom">,
+        Record<string, string>,
+      ][]
+    ).find(([, preset]) => LASER_FIELDS.every((f) => newParams[f] === preset[f]));
     result.laserOption = matchingPreset ? matchingPreset[0] : "custom";
   }
 
@@ -206,38 +233,69 @@ export function formReducer(state: FormState, action: FormAction): FormState {
       return {
         ...state,
         collapsedSections: new Set([
-          "lens", "detection", "laser", "medium", "transducer", "interface", "sample",
+          "lens",
+          "detection",
+          "laser",
+          "medium",
+          "transducer",
+          "interface",
+          "sample",
         ]),
       };
 
     case "EXPAND_ALL":
       return { ...state, collapsedSections: new Set<string>() };
 
-    case "CLEAR":
+    case "RESET":
       return { ...initialFormState, collapsedSections: new Set<string>() };
 
-    case "CLEAR_VALUES": {
+    case "CLEAR": {
       const emptyParams: IsotropicParams = {
-        f_rolloff: "", delay_1: "", delay_2: "",
-        incident_pump: "", incident_probe: "",
-        w_rms: "", x_offset: "", lens_transmittance: "", detector_factor: "",
-        n_al: "", k_al: "",
-        lambda_down: ["", "", ""], eta_down: ["", "", ""],
-        c_down: ["", "", ""], h_down: ["", "", ""],
-        niu: "", alpha_t: "",
-        lambda_up: "", eta_up: "", c_up: "", h_up: "",
+        f_rolloff: "",
+        delay_1: "",
+        delay_2: "",
+        incident_pump: "",
+        incident_probe: "",
+        w_rms: "",
+        x_offset: "",
+        lens_transmittance: "",
+        detector_factor: "",
+        n_al: "",
+        k_al: "",
+        lambda_down: ["", "", ""],
+        eta_down: ["", "", ""],
+        c_down: ["", "", ""],
+        h_down: ["", "", ""],
+        niu: "",
+        alpha_t: "",
+        lambda_up: "",
+        eta_up: "",
+        c_up: "",
+        h_up: "",
       };
       const emptyAniso: AnisotropicExtra = {
-        phi: "", rho: "", alphaT: "",
-        C11_0: "", C12_0: "", C44_0: "",
-        lambda_down_x_sample: "", lambda_down_y_sample: "", lambda_down_z_sample: "",
+        phi: "",
+        rho: "",
+        alphaT: "",
+        C11_0: "",
+        C12_0: "",
+        C44_0: "",
+        lambda_down_x_sample: "",
+        lambda_down_y_sample: "",
+        lambda_down_z_sample: "",
         rho_sample: "",
-        C11_0_sample: "", C12_0_sample: "", C13_0_sample: "",
-        C33_0_sample: "", C44_0_sample: "",
-        alphaT_perp: "", alphaT_para: "",
+        C11_0_sample: "",
+        C12_0_sample: "",
+        C13_0_sample: "",
+        C33_0_sample: "",
+        C44_0_sample: "",
+        alphaT_perp: "",
+        alphaT_para: "",
       };
       const emptyTransverse: TransverseExtra = {
-        v_sum_fixed: "", c_probe: "", g_int: "",
+        v_sum_fixed: "",
+        c_probe: "",
+        g_int: "",
       };
       return {
         ...state,

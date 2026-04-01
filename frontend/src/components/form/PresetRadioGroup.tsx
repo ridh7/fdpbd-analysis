@@ -22,7 +22,12 @@ export function PresetRadioGroup<T extends string>({
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="text-(--text-secondary)">{label}:</span>
-      <ToggleGroup options={toggleOptions} value={value} onChange={onChange} size="sm" />
+      <ToggleGroup
+        options={toggleOptions}
+        value={value}
+        onChange={onChange}
+        size="sm"
+      />
     </div>
   );
 }

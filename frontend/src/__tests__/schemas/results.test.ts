@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
-  FDPBDResultSchema,
+  IsotropicResultSchema,
   AnisotropicResultSchema,
   TransverseResultSchema,
 } from "../../schemas/results";
 
-describe("FDPBDResultSchema", () => {
+describe("IsotropicResultSchema", () => {
   it("accepts valid result data", () => {
     const valid = {
       lambda_measure: 9.7,
@@ -21,18 +21,18 @@ describe("FDPBDResultSchema", () => {
         delta_ratio: [9.2, 9.5, 9.7],
       },
     };
-    const result = FDPBDResultSchema.parse(valid);
+    const result = IsotropicResultSchema.parse(valid);
     expect(result.lambda_measure).toBe(9.7);
     expect(result.plot_data.freq_fit).toHaveLength(3);
   });
 
   it("rejects missing fields", () => {
-    expect(() => FDPBDResultSchema.parse({ lambda_measure: 9.7 })).toThrow();
+    expect(() => IsotropicResultSchema.parse({ lambda_measure: 9.7 })).toThrow();
   });
 
   it("rejects non-numeric values", () => {
     expect(() =>
-      FDPBDResultSchema.parse({
+      IsotropicResultSchema.parse({
         lambda_measure: "not a number",
         alpha_t_fitted: 1e-5,
         t_ss_heat: 0.5,

@@ -1,8 +1,5 @@
 import { useReducer, useCallback } from "react";
-import {
-  analysisReducer,
-  initialAnalysisState,
-} from "../state/analysisReducer";
+import { analysisReducer, initialAnalysisState } from "../state/analysisReducer";
 import {
   analyzeIsotropic,
   analyzeAnisotropic,
@@ -68,8 +65,7 @@ export function useAnalysis() {
           });
         }
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Unknown error occurred";
+        const message = err instanceof Error ? err.message : "Unknown error occurred";
         dispatch({ type: "ERROR", error: message });
       }
     },

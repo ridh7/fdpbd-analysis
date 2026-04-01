@@ -14,9 +14,7 @@ export function AccordionSection({
   children,
 }: AccordionSectionProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | undefined>(
-    isCollapsed ? 0 : undefined,
-  );
+  const [height, setHeight] = useState<number | undefined>(isCollapsed ? 0 : undefined);
 
   useEffect(() => {
     if (!contentRef.current) return;

@@ -46,9 +46,7 @@ export function FitConfigForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs text-(--text-muted)">
-            Lower Bound
-          </label>
+          <label className="mb-1 block text-xs text-(--text-muted)">Lower Bound</label>
           <input
             type="text"
             className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
@@ -58,9 +56,7 @@ export function FitConfigForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-(--text-muted)">
-            Upper Bound
-          </label>
+          <label className="mb-1 block text-xs text-(--text-muted)">Upper Bound</label>
           <input
             type="text"
             className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
@@ -73,9 +69,7 @@ export function FitConfigForm({
 
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="mb-1 block text-xs text-(--text-muted)">
-            Max Iter
-          </label>
+          <label className="mb-1 block text-xs text-(--text-muted)">Max Iter</label>
           <input
             type="text"
             className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"
@@ -85,9 +79,7 @@ export function FitConfigForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-(--text-muted)">
-            Pop Size
-          </label>
+          <label className="mb-1 block text-xs text-(--text-muted)">Pop Size</label>
           <input
             type="text"
             className="w-full rounded bg-(--bg-input) border border-(--border-input) px-2 py-1.5 text-sm text-(--text-primary)"

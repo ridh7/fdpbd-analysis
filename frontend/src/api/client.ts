@@ -19,9 +19,7 @@ export async function postMultipart<T>(
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(
-      body?.detail ?? `Request failed with status ${response.status}`,
-    );
+    throw new Error(body?.detail ?? `Request failed with status ${response.status}`);
   }
 
   return response.json() as Promise<T>;
