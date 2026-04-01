@@ -3,7 +3,7 @@
 from pydantic import BaseModel, Field
 
 
-class AnisotropicFDPBDParams(BaseModel):
+class AnisotropicParams(BaseModel):
     """Input parameters for anisotropic FD-PBD analysis (SI units)."""
 
     f_rolloff: float = Field(gt=0)
@@ -59,7 +59,7 @@ class AnisotropicPlotData(BaseModel):
     ratio_exp: list[float]
 
 
-class AnisotropicFDPBDResult(BaseModel):
+class AnisotropicResult(BaseModel):
     """Result of anisotropic FD-PBD analysis."""
 
     f_peak: float | None = Field(description="Peak out-of-phase frequency (Hz)")

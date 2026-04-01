@@ -16,9 +16,9 @@ from app.core.shared.data_processing import calculate_leaking, correct_data, loa
 from app.core.shared.fitting import fit_rough_analysis
 from app.core.shared.integration import simpson_integration
 from app.models.transverse_isotropic import (
-    TransverseIsotropicParams,
     TransverseIsotropicPlotData,
-    TransverseIsotropicResult,
+    TransverseParams,
+    TransverseResult,
 )
 
 
@@ -476,9 +476,9 @@ def compute_lockin_signals(
     return in_phase, out_of_phase, ratio
 
 
-def run_transverse_isotropic_analysis(
-    params: TransverseIsotropicParams, data_filepath: Path
-) -> TransverseIsotropicResult:
+def run_transverse_analysis(
+    params: TransverseParams, data_filepath: Path
+) -> TransverseResult:
     """Run transversely isotropic FD-PBD analysis."""
     # 1. Load & correct experimental data
     v_out, v_in, _, v_sum, freq = load_data(data_filepath)
@@ -575,7 +575,7 @@ def run_transverse_isotropic_analysis(
     # 8. Rough analysis
     f_peak, ratio_at_peak = fit_rough_analysis(model_freqs, out_mod, ratio_mod)
 
-    return TransverseIsotropicResult(
+    return TransverseResult(
         f_peak=float(f_peak) if not np.isnan(f_peak) else None,
         ratio_at_peak=float(ratio_at_peak) if not np.isnan(ratio_at_peak) else None,
         plot_data=TransverseIsotropicPlotData(

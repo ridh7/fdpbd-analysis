@@ -5,13 +5,13 @@ from pathlib import Path
 import numpy as np
 
 from app.core.shared.data_processing import calculate_leaking, correct_data, load_data
-from app.models.isotropic import FDPBDParams, FDPBDResult, PlotData
+from app.models.isotropic import IsotropicParams, IsotropicResult, PlotData
 
 from .fitting import fit_in_out
 from .thermal_model import compute_steady_state_heat, delta_bo_theta
 
 
-def run_fdpbd_analysis(params: FDPBDParams, data_filepath: Path) -> FDPBDResult:
+def run_isotropic_analysis(params: IsotropicParams, data_filepath: Path) -> IsotropicResult:
     """Run isotropic FD-PBD analysis with given parameters and data file."""
     # Extract parameters
     lambda_down = np.array(params.lambda_down)
@@ -122,7 +122,7 @@ def run_fdpbd_analysis(params: FDPBDParams, data_filepath: Path) -> FDPBDResult:
     delta_out = np.imag(delta_theta)
     delta_ratio = -delta_in / delta_out
 
-    return FDPBDResult(
+    return IsotropicResult(
         lambda_measure=lambda_measure,
         alpha_t_fitted=alpha_t_fitted,
         t_ss_heat=t_ss_heat,

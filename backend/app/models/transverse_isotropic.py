@@ -3,7 +3,7 @@
 from pydantic import BaseModel, Field
 
 
-class TransverseIsotropicParams(BaseModel):
+class TransverseParams(BaseModel):
     """Input parameters for transverse isotropic FD-PBD analysis (SI units)."""
 
     # Lock-in correction
@@ -77,7 +77,7 @@ class TransverseIsotropicPlotData(BaseModel):
     ratio_exp: list[float]
 
 
-class TransverseIsotropicResult(BaseModel):
+class TransverseResult(BaseModel):
     """Result of transverse isotropic FD-PBD analysis."""
 
     f_peak: float | None = Field(default=None, description="Peak frequency (Hz)")

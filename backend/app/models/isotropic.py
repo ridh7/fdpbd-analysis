@@ -3,7 +3,7 @@
 from pydantic import BaseModel, Field
 
 
-class FDPBDParams(BaseModel):
+class IsotropicParams(BaseModel):
     """Input parameters for isotropic FD-PBD analysis (SI units)."""
 
     f_rolloff: float = Field(gt=0, description="Amplitude frequency (Hz)")
@@ -55,7 +55,7 @@ class PlotData(BaseModel):
     delta_ratio: list[float]
 
 
-class FDPBDResult(BaseModel):
+class IsotropicResult(BaseModel):
     """Result of isotropic FD-PBD analysis."""
 
     lambda_measure: float = Field(description="Measured thermal conductivity (W/m-K)")

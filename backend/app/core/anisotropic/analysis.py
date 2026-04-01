@@ -17,9 +17,9 @@ from app.core.shared.data_processing import calculate_leaking, correct_data, loa
 from app.core.shared.fitting import fit_rough_analysis
 from app.core.shared.integration import simpson_integration
 from app.models.anisotropic import (
-    AnisotropicFDPBDParams,
-    AnisotropicFDPBDResult,
+    AnisotropicParams,
     AnisotropicPlotData,
+    AnisotropicResult,
 )
 
 ANISOTROPIC_FIT_PARAMS = [
@@ -467,8 +467,8 @@ def compute_lockin_signals(
 
 
 def run_anisotropic_analysis(
-    params: AnisotropicFDPBDParams, data_filepath: Path
-) -> AnisotropicFDPBDResult:
+    params: AnisotropicParams, data_filepath: Path
+) -> AnisotropicResult:
     """Run anisotropic FD-PBD analysis."""
     c_probe = 0.7
     g_int = 100e6
@@ -549,7 +549,7 @@ def run_anisotropic_analysis(
 
     f_peak, ratio_at_peak = fit_rough_analysis(model_freqs, out_mod, ratio_mod)
 
-    return AnisotropicFDPBDResult(
+    return AnisotropicResult(
         f_peak=float(f_peak) if not np.isnan(f_peak) else None,
         ratio_at_peak=float(ratio_at_peak) if not np.isnan(ratio_at_peak) else None,
         lambda_measure=None,

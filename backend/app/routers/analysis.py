@@ -22,12 +22,12 @@ from app.core.shared.fitting_de import (
     run_transverse_fit,
 )
 from app.dependencies import get_analysis_service
-from app.models.anisotropic import AnisotropicFDPBDParams, AnisotropicFDPBDResult
+from app.models.anisotropic import AnisotropicParams, AnisotropicResult
 from app.models.fitting import AnisotropicFitParams, TransverseFitParams
-from app.models.isotropic import FDPBDParams, FDPBDResult
+from app.models.isotropic import IsotropicParams, IsotropicResult
 from app.models.transverse_isotropic import (
-    TransverseIsotropicParams,
-    TransverseIsotropicResult,
+    TransverseParams,
+    TransverseResult,
 )
 from app.services.analysis_service import AnalysisService
 
@@ -45,12 +45,12 @@ def _parse_params(params_str: str) -> dict[str, Any]:
         ) from e
 
 
-@router.post("/analyze", response_model=FDPBDResult)
+@router.post("/analyze", response_model=IsotropicResult)
 async def analyze_isotropic(
     params: str = Form(...),
     file: UploadFile = File(...),
     service: AnalysisService = Depends(get_analysis_service),
-) -> FDPBDResult:
+) -> IsotropicResult:
     """Run isotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
 
@@ -61,7 +61,7 @@ async def analyze_isotropic(
         ]
 
     try:
-        validated_params = FDPBDParams(**params_dict)
+        validated_params = IsotropicParams(**params_dict)
     except ValueError as e:
         raise HTTPException(
             status_code=422, detail=f"Parameter validation failed: {e}"
@@ -74,17 +74,17 @@ async def analyze_isotropic(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/analyze_anisotropy", response_model=AnisotropicFDPBDResult)
+@router.post("/analyze_anisotropy", response_model=AnisotropicResult)
 async def analyze_anisotropic(
     params: str = Form(...),
     file: UploadFile = File(...),
     service: AnalysisService = Depends(get_analysis_service),
-) -> AnisotropicFDPBDResult:
+) -> AnisotropicResult:
     """Run anisotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
 
     try:
-        validated_params = AnisotropicFDPBDParams(**params_dict)
+        validated_params = AnisotropicParams(**params_dict)
     except ValueError as e:
         raise HTTPException(
             status_code=422, detail=f"Parameter validation failed: {e}"
@@ -97,17 +97,17 @@ async def analyze_anisotropic(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/analyze_transverse", response_model=TransverseIsotropicResult)
+@router.post("/analyze_transverse", response_model=TransverseResult)
 async def analyze_transverse(
     params: str = Form(...),
     file: UploadFile = File(...),
     service: AnalysisService = Depends(get_analysis_service),
-) -> TransverseIsotropicResult:
+) -> TransverseResult:
     """Run transverse isotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
 
     try:
-        validated_params = TransverseIsotropicParams(**params_dict)
+        validated_params = TransverseParams(**params_dict)
     except ValueError as e:
         raise HTTPException(
             status_code=422, detail=f"Parameter validation failed: {e}"
