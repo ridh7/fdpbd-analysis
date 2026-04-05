@@ -1,3 +1,4 @@
+/** Upper medium parameters: thermal conductivity, density, heat capacity, thickness of the medium above the sample (typically air). Includes air/custom preset selector. */
 import type { IsotropicParams } from "../../../schemas/params";
 import type { MediumOption } from "../../../constants/presets";
 import { ParamInput } from "../ParamInput";

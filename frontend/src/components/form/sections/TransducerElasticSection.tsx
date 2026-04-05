@@ -1,3 +1,4 @@
+/** Transducer elastic/thermal properties for anisotropic modes: density (rho), thermal expansion (alphaT), and elastic stiffness constants (C11, C12, C44) in Voigt notation. Only shown in anisotropic/transverse modes. */
 import type { AnisotropicExtra } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 

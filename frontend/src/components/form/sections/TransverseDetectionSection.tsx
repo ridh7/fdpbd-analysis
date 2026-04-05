@@ -1,3 +1,4 @@
+/** Transverse isotropic detection parameters: fixed sum voltage (v_sum_fixed), probe correction (c_probe), and interfacial thermal conductance (g_int). Only shown in transverse isotropic mode. */
 import type { TransverseExtra } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 

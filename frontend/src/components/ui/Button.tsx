@@ -1,3 +1,18 @@
+/**
+ * Reusable button component with four visual variants:
+ *   - primary:   green fill — main actions like "Run Analysis"
+ *   - secondary: outlined border — supporting actions like "Clear", "Reset"
+ *   - danger:    red fill — destructive actions like "Cancel" fitting
+ *   - ghost:     no border/fill — subtle actions, icon-only buttons
+ *
+ * Each variant has distinct enabled and disabled styles. Disabled buttons
+ * lose their color and get cursor-not-allowed, providing a clear visual
+ * hierarchy: primary (bold) > secondary (outlined) > disabled (muted).
+ *
+ * Extends native button props so callers can pass onClick, className, etc.
+ *
+ * Used by: ActionBar, FittingProgress, FileUpload, TabBar
+ */
 import type { ButtonHTMLAttributes } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";

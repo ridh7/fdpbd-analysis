@@ -1,3 +1,19 @@
+/**
+ * Generic segmented toggle button group — used for any "pick one of N" UI.
+ *
+ * Renders a horizontal row of buttons where exactly one is active at a time.
+ * Generic over T so callers get type-safe values (e.g., ToggleGroup<AnalysisMode>
+ * ensures onChange only receives valid mode strings).
+ *
+ * Two sizes:
+ *   - md: flex-1 so buttons share available width equally (mode selector, tabs)
+ *   - sm: shrink-to-fit with whitespace-nowrap (preset selectors like lens/laser)
+ *
+ * Active button gets a filled background (--mode-btn-active-bg), inactive buttons
+ * get an outlined border. Disabled buttons are faded with opacity-50.
+ *
+ * Used by: AnalysisModeSelector, TabBar, PresetRadioGroup
+ */
 interface ToggleOption<T extends string> {
   value: T;
   label: string;

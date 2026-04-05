@@ -1,3 +1,48 @@
+/**
+ * Form state reducer — manages all user-editable input state for the
+ * FD-PBD analysis tool using React's useReducer pattern.
+ *
+ * ## Why useReducer instead of useState?
+ * The form has ~40 scalar fields, 4 array fields (3 elements each),
+ * 3 preset selectors, a file input, analysis mode, and section collapse
+ * state. With useState, each would need its own setter — 15+ useState
+ * calls scattered across the component. useReducer consolidates all
+ * state transitions into a single, predictable function.
+ *
+ * ## State shape
+ * - `params`: IsotropicParams — the "base" parameters shared across modes
+ * - `anisotropicParams`: AnisotropicExtra — extra fields for aniso/transverse
+ * - `transverseParams`: TransverseExtra — additional fields for transverse only
+ * - `file`: the uploaded .txt data file (or null)
+ * - `lensOption`, `mediumOption`, `laserOption`: current preset selections
+ * - `collapsedSections`: Set<string> tracking which accordion sections are folded
+ *
+ * ## String values
+ * All parameter values are stored as strings, not numbers. This is
+ * intentional: HTML inputs produce strings, and converting to numbers
+ * would destroy intermediate typing states (e.g., "0." becomes 0,
+ * "-" becomes NaN). Conversion to numbers happens only at submission
+ * time via the buildPayload functions in lib/unitConversions.ts.
+ *
+ * ## Preset auto-detection (detectPresetChange)
+ * When a user manually edits a field that belongs to a preset group
+ * (lens, medium, or laser), the reducer checks if the resulting values
+ * still match a known preset. If they do, the preset selector updates
+ * to reflect that; if not, it switches to "custom". This means a user
+ * who selects "5x" lens and then manually types the same values as
+ * "10x" will see the selector flip to "10x" automatically.
+ *
+ * ## Actions
+ * - SET_FIELD / SET_ARRAY_FIELD: update individual param values
+ * - SET_ANISO_FIELD / SET_TRANSVERSE_FIELD: update mode-specific params
+ * - SET_MODE: switch analysis mode (resets aniso defaults when switching
+ *   between aniso ↔ transverse because they use different default values)
+ * - SET_FILE: store uploaded file reference
+ * - SET_LENS/MEDIUM/LASER_OPTION: apply preset or switch to custom
+ * - TOGGLE/COLLAPSE_ALL/EXPAND_ALL: accordion section visibility
+ * - RESET: restore all fields to default values (undo all edits)
+ * - CLEAR: empty all fields to blank strings (start from scratch)
+ */
 import type {
   IsotropicParams,
   AnisotropicExtra,
@@ -87,13 +132,23 @@ function detectPresetChange(
     laserOption?: LaserOption;
   } = {};
 
+  // (LENS_FIELDS as readonly string[])  — cast needed because .includes() expects
+  //   string, but LENS_FIELDS is readonly ["w_rms", ...] (narrower literal types)
   if ((LENS_FIELDS as readonly string[]).includes(field)) {
     const matchingPreset = (
+      // Object.entries(LENS_PRESETS) returns [string, unknown][] by default —
+      // the `as` cast tells TypeScript each entry is a tuple of:
+      //   [0]: preset name, e.g. "5x" | "10x" | "20x" (Exclude removes "custom")
+      //   [1]: the preset's field values, e.g. { w_rms: "3.5", ... }
       Object.entries(LENS_PRESETS) as [
-        Exclude<LensOption, "custom">,
-        Record<string, string>,
+        Exclude<LensOption, "custom">,  // "5x" | "10x" | "20x" (without "custom")
+        Record<string, string>,         // { fieldName: fieldValue }
       ][]
+    // ([, preset]) — destructuring: skip index [0] (name), grab index [1] (values)
+    // .every() — returns true only if ALL lens fields match the preset
     ).find(([, preset]) => LENS_FIELDS.every((f) => newParams[f] === preset[f]));
+    // matchingPreset is [name, values] or undefined
+    // matchingPreset[0] is the preset name (e.g. "10x"); fallback to "custom"
     result.lensOption = matchingPreset ? matchingPreset[0] : "custom";
   }
   if ((MEDIUM_FIELDS as readonly string[]).includes(field)) {

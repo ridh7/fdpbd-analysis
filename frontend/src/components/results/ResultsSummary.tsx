@@ -1,3 +1,15 @@
+/**
+ * Numeric results summary card — displays the key scalar outputs from
+ * the forward model analysis:
+ *   - lambda_measure: measured thermal conductivity (W/m-K)
+ *   - alpha_t_fitted: fitted thermal expansion coefficient (1/K)
+ *   - t_ss_heat: steady-state surface temperature rise (K)
+ *   - timeTaken: client-measured wall-clock time for the request
+ *
+ * Shows a mode badge (Isotropic/Anisotropic/Transverse) and handles
+ * nullable fields gracefully (anisotropic/transverse results may have
+ * null values for some quantities).
+ */
 import type { AnalysisResult } from "../../state/analysisReducer";
 
 interface ResultsSummaryProps {
@@ -45,11 +57,7 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
           />
           <ResultItem
             label="Ratio at Peak"
-            value={
-              result.data.ratio_at_peak != null
-                ? result.data.ratio_at_peak.toFixed(4)
-                : "N/A"
-            }
+            value={result.data.ratio_at_peak != null ? result.data.ratio_at_peak.toFixed(4) : "N/A"}
           />
         </div>
       )}

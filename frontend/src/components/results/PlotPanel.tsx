@@ -1,3 +1,10 @@
+/**
+ * Plot container — renders the InOutPhasePlot and RatioPlot side-by-side
+ * in a 2-column grid. Accepts either isotropic or anisotropic plot data
+ * (the child components handle the shape difference internally).
+ *
+ * Receives the current theme to pass to chart components for Plotly styling.
+ */
 import type { PlotData, AnisotropicPlotData } from "../../schemas/results";
 import type { Theme } from "../../constants/theme";
 import { InOutPhasePlot } from "./charts/InOutPhasePlot";

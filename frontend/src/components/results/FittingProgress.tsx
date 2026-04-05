@@ -1,3 +1,25 @@
+/**
+ * DE fitting progress & results panel — a state-machine UI that renders
+ * one of four mutually exclusive views based on the fitting lifecycle:
+ *
+ *   1. Error   → red banner with error message (highest priority, checked first)
+ *   2. Result  → green success card with a 2-column grid of fitted values
+ *                 (parameter name/value, cost, time, optional peak freq/ratio)
+ *   3. Waiting → blue "Starting…" card with indeterminate sliding progress bar
+ *                 (isFitting=true but no progress yet — initial population eval)
+ *   4. Running → blue card with determinate progress bar (generation N / max),
+ *                 best cost, convergence, elapsed time, and a Cancel button
+ *   (null)     → returns null when idle (not fitting, no progress/result/error)
+ *
+ * The priority order (error > result > waiting > running) ensures the most
+ * important state is always shown. The cancel button only appears during
+ * active fitting (state 4), not during the initial population evaluation
+ * (state 3) — the backend doesn't support cancellation mid-generation.
+ *
+ * Note: `progress.best_value` and `convergence` use scientific notation
+ * (toExponential) because cost function values can span many orders of
+ * magnitude, while `elapsed_s` and `total_time_s` use fixed decimals.
+ */
 import type { FitProgress, FitResultData } from "../../schemas/results";
 import { Button } from "../ui/Button";
 

@@ -1,3 +1,47 @@
+/**
+ * DE fitting hook — manages the lifecycle of a differential evolution
+ * fitting run with real-time SSE streaming and cancellation support.
+ *
+ * ## Why useState instead of useReducer?
+ * Unlike useAnalysis (which uses a reducer), this hook uses useState
+ * because the state updates are simpler — mostly partial updates to
+ * individual fields as SSE events arrive. A reducer would add ceremony
+ * without much benefit here since we're updating progress incrementally
+ * rather than transitioning between discrete states.
+ *
+ * ## AbortController lifecycle
+ * Uses a ref (abortRef) to hold the current AbortController:
+ *   - startFit: creates a new controller, aborts any previous one
+ *   - cancelFit: aborts the current controller, resets isFitting
+ *   - resetFit: aborts + clears all state (used when switching modes)
+ *
+ * The ref (not state) is used because changing the controller shouldn't
+ * trigger a re-render, and we need to access it from stale closures.
+ *
+ * ## SSE event handling
+ * Iterates over the async generator from streamFit() using for-await:
+ *   - "progress" events: update progress state (generation, best cost, etc.)
+ *   - "result" event: store final result, set isFitting=false
+ *   - "error" event: store error message, set isFitting=false
+ *
+ * ## Cancellation behavior
+ * When the user clicks Cancel:
+ *   1. cancelFit() calls controller.abort()
+ *   2. The fetch in streamFit() throws an AbortError
+ *   3. The catch block detects AbortError by name and silently resets
+ *      (no error shown to user — cancellation is intentional)
+ *   4. The reader lock is released in streamFit's finally block
+ *
+ * Note: cancellation is client-side only — the backend continues its
+ * computation until it naturally completes. Server-side cancellation
+ * was attempted but reverted due to Starlette's SSE limitations.
+ *
+ * ## Fit config payload
+ * The hook converts FitConfigState (string values from form inputs)
+ * to numeric values for the API payload (parseFloat/parseInt). This
+ * follows the same pattern as useAnalysis: strings in state, numbers
+ * at the API boundary.
+ */
 import { useState, useCallback, useRef } from "react";
 import { streamFit } from "../api/fitting";
 import type { FitProgress, FitResultData } from "../schemas/results";

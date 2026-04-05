@@ -1,3 +1,4 @@
+/** Isotropic sample parameters: 3-layer stack thermal properties (conductivity, anisotropy ratio, heat capacity, thickness) plus bulk Poisson's ratio and thermal expansion. Only shown in isotropic mode. */
 import type { IsotropicParams } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 

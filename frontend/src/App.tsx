@@ -1,3 +1,44 @@
+/**
+ * Root application component — orchestrates the entire FD-PBD analysis UI.
+ *
+ * ## Layout
+ * Full-height flexbox with three sections:
+ *   1. AppHeader — top bar with title + theme toggle
+ *   2. Left panel (1/3 width) — form inputs, mode selector, file upload
+ *   3. Right panel (2/3 width) — results, plots, fitting progress
+ *
+ * ## State management
+ * Three independent state sources, each with different lifecycles:
+ *   - formReducer (useReducer): all user inputs — params, file, presets,
+ *     analysis mode, collapsed sections. Persists across runs.
+ *   - useAnalysis hook: forward model results — clears on each new run.
+ *   - useFitting hook: DE fitting state — progress, result, error.
+ *   - useTheme hook: dark/light mode with localStorage persistence.
+ *   - activeTab (useState): "forward" or "fitting" tab selection.
+ *   - fitConfig (useState): DE fitting configuration (bounds, iterations).
+ *
+ * ## Data flow
+ * All state lives here and flows down via props. Child components never
+ * own state — they receive values and call callbacks:
+ *   App owns state → passes to ForwardModelForm/FitConfigForm/ResultsSummary
+ *   App owns handlers → wraps dispatch calls (handleFieldChange, etc.)
+ *
+ * ## Key behaviors
+ * - Tab auto-reset: when switching to isotropic mode, the fitting tab is
+ *   disabled and activeTab resets to "forward" via useEffect
+ * - Mutual exclusion: starting a forward run resets fitting state and
+ *   vice versa — prevents showing stale results from the other mode
+ * - Validation: isFormValid() checks all required fields before enabling
+ *   the Run button. Validates different field sets based on analysis mode
+ * - Empty state: right panel shows file upload prompt when no results exist
+ *
+ * ## Why handlers wrap dispatch
+ * Instead of passing `dispatch` directly to children, App wraps each
+ * dispatch call in a named handler (handleFieldChange, handleReset, etc.).
+ * This keeps children decoupled from the action type strings and lets
+ * App add cross-cutting logic (e.g., handleReset also calls analysis.reset
+ * and fitting.resetFit — something a child component wouldn't know to do).
+ */
 import { useEffect, useReducer, useState } from "react";
 import { formReducer, initialFormState } from "./state/formReducer";
 import { useAnalysis } from "./hooks/useAnalysis";
@@ -41,12 +82,24 @@ function App() {
       ? TRANS_FITTABLE_PARAMS
       : ANISO_FITTABLE_PARAMS;
 
-  // Reset to forward tab when switching to a mode that doesn't support fitting
+  // Reset to forward tab when switching to a mode that doesn't support fitting,
+  // and reset fit config to match the new mode's default parameter + bounds
   useEffect(() => {
     if (!fittingEnabled) {
       setActiveTab("forward");
     }
-  }, [fittingEnabled]);
+    const params =
+      form.analysisMode === "transverse_isotropic"
+        ? TRANS_FITTABLE_PARAMS
+        : ANISO_FITTABLE_PARAMS;
+    const firstParam = params[0];
+    setFitConfig({
+      ...DEFAULT_FIT_CONFIG,
+      parameterToFit: firstParam.key,
+      boundsMin: firstParam.defaultMin,
+      boundsMax: firstParam.defaultMax,
+    });
+  }, [form.analysisMode, fittingEnabled]);
 
   const handleFitConfigChange = (field: keyof FitConfigState, value: string) => {
     setFitConfig((prev) => ({ ...prev, [field]: value }));
@@ -130,6 +183,17 @@ function App() {
 
   const handleReset = () => {
     dispatch({ type: "RESET" });
+    const params =
+      form.analysisMode === "transverse_isotropic"
+        ? TRANS_FITTABLE_PARAMS
+        : ANISO_FITTABLE_PARAMS;
+    const firstParam = params[0];
+    setFitConfig({
+      ...DEFAULT_FIT_CONFIG,
+      parameterToFit: firstParam.key,
+      boundsMin: firstParam.defaultMin,
+      boundsMax: firstParam.defaultMax,
+    });
     analysis.reset();
     fitting.resetFit();
   };
@@ -317,8 +381,12 @@ function App() {
               <div className="flex flex-col items-center gap-3">
                 <p className="text-(--text-muted)">
                   {form.file
-                    ? 'Click "Run Analysis" to see results.'
-                    : 'Upload a data file and click "Run Analysis" to see results.'}
+                    ? activeTab === "fitting"
+                      ? 'Click "Run Fit" to start DE fitting.'
+                      : 'Click "Run Analysis" to see results.'
+                    : activeTab === "fitting"
+                      ? 'Upload a data file and click "Run Fit" to start DE fitting.'
+                      : 'Upload a data file and click "Run Analysis" to see results.'}
                 </p>
                 {!form.file && (
                   <FileUpload

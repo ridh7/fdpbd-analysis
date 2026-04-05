@@ -1,3 +1,4 @@
+/** Three-way toggle for selecting the analysis symmetry mode: Isotropic, Anisotropic, or Transverse Isotropic. Thin wrapper around ToggleGroup that maps AnalysisMode values to display labels. Disabled while analysis is processing. */
 import type { AnalysisMode } from "../../constants/defaults";
 import { ToggleGroup } from "../ui/ToggleGroup";
 

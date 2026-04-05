@@ -1,3 +1,4 @@
+/** Lens/optics parameters: beam spot size, pump-probe offset, transmittance, detector gain. Includes 5x/10x/20x preset selector. */
 import type { IsotropicParams } from "../../../schemas/params";
 import type { LensOption } from "../../../constants/presets";
 import { ParamInput } from "../ParamInput";

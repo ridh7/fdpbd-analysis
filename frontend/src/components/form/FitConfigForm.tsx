@@ -1,3 +1,14 @@
+/**
+ * DE (Differential Evolution) fitting configuration form.
+ *
+ * Shown when the user switches to the "DE Fitting" tab. Lets the user
+ * select which sample parameter to optimize (from a mode-dependent list),
+ * set search bounds, and configure solver settings (max iterations,
+ * population size, convergence tolerance).
+ *
+ * All values are strings for form input compatibility — parsed to numbers
+ * in useFitting before sending to the backend.
+ */
 import type { FitConfigState, FittableParam } from "../../constants/defaults";
 
 interface FitConfigFormProps {

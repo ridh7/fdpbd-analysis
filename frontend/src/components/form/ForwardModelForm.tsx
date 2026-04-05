@@ -1,3 +1,21 @@
+/**
+ * Forward model parameter form — the main left-panel content.
+ *
+ * Renders a scrollable list of AccordionSection cards, each containing
+ * a group of related ParamInput fields (Lens, Detection, Laser, Medium,
+ * Transducer, Interface, Sample). The visible sections change based on
+ * the analysis mode:
+ *   - Isotropic: shows all base sections + isotropic sample
+ *   - Anisotropic: replaces isotropic sample with anisotropic sample +
+ *     transducer elastic, hides interface section
+ *   - Transverse: same as anisotropic + adds transverse detection section
+ *
+ * Section order matches the original TOPS measurement system frontend
+ * (Lens → Detection → Laser → Medium → Transducer → Interface → Sample).
+ *
+ * Collapse state is controlled externally via the formReducer's
+ * collapsedSections Set, enabling the global collapse/expand all button.
+ */
 import type {
   IsotropicParams,
   AnisotropicExtra,
@@ -108,7 +126,7 @@ export function ForwardModelForm({
       </AccordionSection>
 
       <AccordionSection
-        title="Medium (Above Sample)"
+        title="Medium"
         isCollapsed={collapsedSections.has("medium")}
         onToggle={() => onToggleSection("medium")}
       >
@@ -122,6 +140,7 @@ export function ForwardModelForm({
       </AccordionSection>
 
       <AccordionSection
+        key={`transducer-${analysisMode}`}
         title="Transducer (Layer 1)"
         isCollapsed={collapsedSections.has("transducer")}
         onToggle={() => onToggleSection("transducer")}
@@ -159,13 +178,8 @@ export function ForwardModelForm({
       )}
 
       <AccordionSection
-        title={
-          isIsotropic
-            ? "Sample / Substrate (Layer 3)"
-            : analysisMode === "transverse_isotropic"
-              ? "Sample (Transverse Isotropic)"
-              : "Sample (Anisotropic)"
-        }
+        key={analysisMode}
+        title={isIsotropic ? "Sample (Layer 3)" : "Sample (Layer 2)"}
         isCollapsed={collapsedSections.has("sample")}
         onToggle={() => onToggleSection("sample")}
       >

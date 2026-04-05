@@ -1,3 +1,12 @@
+/**
+ * Ratio plot (V_in / V_out) — shows the signal ratio which is the primary
+ * observable used for thermal conductivity extraction.
+ *
+ * Same dual-format handling as InOutPhasePlot: both modes plot model vs
+ * experiment, but isotropic uses a shared frequency axis while
+ * anisotropic/transverse uses separate axes (higher-resolution model).
+ * Same theme import pattern (direct palette objects) for Plotly compatibility.
+ */
 import Plot from "./Plot";
 import type { PlotData, AnisotropicPlotData } from "../../../schemas/results";
 import { darkTheme, lightTheme, type Theme } from "../../../constants/theme";
@@ -24,7 +33,7 @@ export function RatioPlot({ data, theme }: RatioPlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "Ratio (data)",
-          marker: { color: "#22c55e", size: 5 },
+          marker: { color: palette.plotRatio, size: 5 },
         },
         {
           x: data.model_freqs,
@@ -32,7 +41,7 @@ export function RatioPlot({ data, theme }: RatioPlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "Ratio (model)",
-          line: { color: "#22c55e", width: 2 },
+          line: { color: palette.plotRatio, width: 2 },
         },
       ]
     : [
@@ -42,7 +51,7 @@ export function RatioPlot({ data, theme }: RatioPlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "Ratio (data)",
-          marker: { color: "#22c55e", size: 5 },
+          marker: { color: palette.plotRatio, size: 5 },
         },
         {
           x: data.freq_fit,
@@ -50,7 +59,7 @@ export function RatioPlot({ data, theme }: RatioPlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "Ratio (model)",
-          line: { color: "#22c55e", width: 2 },
+          line: { color: palette.plotRatio, width: 2 },
         },
       ];
 

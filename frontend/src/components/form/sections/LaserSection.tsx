@@ -1,3 +1,4 @@
+/** Laser/electronics parameters: rolloff frequency, delays, pump/probe power. Includes TOPS 1/TOPS 2 preset selector. */
 import type { IsotropicParams } from "../../../schemas/params";
 import type { LaserOption } from "../../../constants/presets";
 import { ParamInput } from "../ParamInput";

@@ -1,3 +1,18 @@
+/**
+ * In-phase and out-of-phase signal plot — overlays model curves against
+ * experimental data on a log-frequency x-axis.
+ *
+ * Handles two different data shapes (both plot model vs experiment):
+ *   - Isotropic (PlotData): model (delta_in/out) and experiment (v_corr_in/out_fit)
+ *     share the same frequency axis (freq_fit)
+ *   - Anisotropic/Transverse (AnisotropicPlotData): model and experiment have
+ *     separate frequency axes (model_freqs vs exp_freqs) since the model may
+ *     be computed at higher resolution than the experimental data points
+ *
+ * Theme colors are imported directly from the palette objects (not CSS vars)
+ * because Plotly renders to a <canvas>/<svg> outside React's DOM — CSS custom
+ * properties set in useEffect would be stale when Plotly reads them.
+ */
 import Plot from "./Plot";
 import type { PlotData, AnisotropicPlotData } from "../../../schemas/results";
 import { darkTheme, lightTheme, type Theme } from "../../../constants/theme";
@@ -24,7 +39,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "In-phase (data)",
-          marker: { color: "#3b82f6", size: 5 },
+          marker: { color: palette.plotInPhase, size: 5 },
         },
         {
           x: data.model_freqs,
@@ -32,7 +47,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "In-phase (model)",
-          line: { color: "#3b82f6", width: 2 },
+          line: { color: palette.plotInPhase, width: 2 },
         },
         {
           x: data.exp_freqs,
@@ -40,7 +55,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "Out-of-phase (data)",
-          marker: { color: "#ef4444", size: 5 },
+          marker: { color: palette.plotOutPhase, size: 5 },
         },
         {
           x: data.model_freqs,
@@ -48,7 +63,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "Out-of-phase (model)",
-          line: { color: "#ef4444", width: 2 },
+          line: { color: palette.plotOutPhase, width: 2 },
         },
       ]
     : [
@@ -58,7 +73,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "In-phase (data)",
-          marker: { color: "#3b82f6", size: 5 },
+          marker: { color: palette.plotInPhase, size: 5 },
         },
         {
           x: data.freq_fit,
@@ -66,7 +81,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "In-phase (model)",
-          line: { color: "#3b82f6", width: 2 },
+          line: { color: palette.plotInPhase, width: 2 },
         },
         {
           x: data.freq_fit,
@@ -74,7 +89,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "markers" as const,
           name: "Out-of-phase (data)",
-          marker: { color: "#ef4444", size: 5 },
+          marker: { color: palette.plotOutPhase, size: 5 },
         },
         {
           x: data.freq_fit,
@@ -82,7 +97,7 @@ export function InOutPhasePlot({ data, theme }: InOutPhasePlotProps) {
           type: "scatter" as const,
           mode: "lines" as const,
           name: "Out-of-phase (model)",
-          line: { color: "#ef4444", width: 2 },
+          line: { color: palette.plotOutPhase, width: 2 },
         },
       ];
 

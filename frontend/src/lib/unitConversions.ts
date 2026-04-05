@@ -1,3 +1,27 @@
+/**
+ * Unit conversion utilities: display units -> SI units for API payloads.
+ *
+ * The frontend displays values in units that are conventional in the thermal
+ * measurement community (µm for thicknesses, mW for laser power, etc.) because
+ * these are the units researchers think in. However, the backend physics engine
+ * performs all calculations in SI units (meters, watts, etc.).
+ *
+ * These builder functions bridge the gap: they take the raw string values from
+ * the React form state, parse them to numbers, and apply the necessary
+ * conversion factors before sending to the FastAPI backend.
+ *
+ * Conversion factors used throughout:
+ *   µm  -> m      : ×1e-6   (micrometer to meter)
+ *   mW  -> W      : ×1e-3   (milliwatt to watt)
+ *   J/cm³-K -> J/m³-K : ×1e6  (volumetric heat capacity, 1 cm = 1e-2 m, cubed = 1e-6)
+ *   g/cm³ -> kg/m³ : ×1e3   (density)
+ *   GPa -> Pa     : ×1e9   (elastic constants)
+ *
+ * Each build function corresponds to one analysis mode (isotropic, anisotropic,
+ * transverse isotropic) and produces the exact JSON shape expected by its
+ * respective backend endpoint.
+ */
+
 import type {
   IsotropicParams,
   AnisotropicExtra,
@@ -5,50 +29,53 @@ import type {
 } from "../schemas/params";
 
 /**
- * Convert display-unit form values to SI units for the API.
+ * Build the isotropic analysis API payload.
  *
- * Conversions:
- * - w_rms, x_offset: µm → m (×1e-6)
- * - h_down: µm → m (×1e-6)
- * - incident_pump, incident_probe: mW → W (×1e-3)
- * - c_down: J/cm³-K → J/m³-K (×1e6)
+ * The isotropic model treats thermal conductivity as a single scalar per layer
+ * and supports an arbitrary number of "down" (substrate-side) layers specified
+ * by the lambda_down, c_down, and h_down arrays.
  */
 export function buildIsotropicPayload(
   params: IsotropicParams,
 ): Record<string, unknown> {
   return {
-    f_rolloff: parseFloat(params.f_rolloff),
-    delay_1: parseFloat(params.delay_1),
-    delay_2: parseFloat(params.delay_2),
-    incident_pump: parseFloat(params.incident_pump) * 1e-3,
-    incident_probe: parseFloat(params.incident_probe) * 1e-3,
-    w_rms: parseFloat(params.w_rms) * 1e-6,
-    x_offset: parseFloat(params.x_offset) * 1e-6,
-    lens_transmittance: parseFloat(params.lens_transmittance),
-    detector_factor: parseFloat(params.detector_factor),
-    n_al: parseFloat(params.n_al),
-    k_al: parseFloat(params.k_al),
-    lambda_down: params.lambda_down.map((v) => parseFloat(v)),
-    eta_down: params.eta_down.join(","),
-    c_down: params.c_down.map((v) => parseFloat(v) * 1e6),
-    h_down: params.h_down.map((v) => parseFloat(v) * 1e-6),
-    niu: parseFloat(params.niu),
-    alpha_t: parseFloat(params.alpha_t),
-    lambda_up: parseFloat(params.lambda_up),
-    eta_up: parseFloat(params.eta_up),
-    c_up: parseFloat(params.c_up),
-    h_up: parseFloat(params.h_up),
+    f_rolloff: parseFloat(params.f_rolloff), // modulation frequency (Hz) — no conversion
+    delay_1: parseFloat(params.delay_1), // delay range start (ps) — no conversion
+    delay_2: parseFloat(params.delay_2), // delay range end (ps) — no conversion
+    incident_pump: parseFloat(params.incident_pump) * 1e-3, // mW -> W
+    incident_probe: parseFloat(params.incident_probe) * 1e-3, // mW -> W
+    w_rms: parseFloat(params.w_rms) * 1e-6, // beam spot radius: µm -> m
+    x_offset: parseFloat(params.x_offset) * 1e-6, // pump-probe offset: µm -> m
+    lens_transmittance: parseFloat(params.lens_transmittance), // dimensionless ratio
+    detector_factor: parseFloat(params.detector_factor), // dimensionless gain
+    n_al: parseFloat(params.n_al), // transducer refractive index (real part)
+    k_al: parseFloat(params.k_al), // transducer extinction coefficient
+    lambda_down: params.lambda_down.map((v) => parseFloat(v)), // thermal conductivity (W/m-K) — already SI
+    eta_down: params.eta_down.join(","), // anisotropy ratios, sent as CSV string
+    c_down: params.c_down.map((v) => parseFloat(v) * 1e6), // heat capacity: J/cm³-K -> J/m³-K
+    h_down: params.h_down.map((v) => parseFloat(v) * 1e-6), // layer thickness: µm -> m
+    niu: parseFloat(params.niu), // Poisson's ratio — dimensionless
+    alpha_t: parseFloat(params.alpha_t), // thermal expansion coefficient
+    lambda_up: parseFloat(params.lambda_up), // upper medium conductivity (W/m-K)
+    eta_up: parseFloat(params.eta_up), // upper medium anisotropy ratio
+    c_up: parseFloat(params.c_up), // upper medium heat capacity
+    h_up: parseFloat(params.h_up), // upper medium thickness
   };
 }
 
 /**
- * Convert display-unit form values to SI units for the anisotropic API.
+ * Build the anisotropic analysis API payload.
  *
- * Additional conversions vs isotropic:
- * - rho, rho_sample: g/cm³ → kg/m³ (×1e3)
- * - C11_0, C12_0, C44_0, all sample elastic constants: GPa → Pa (×1e9)
- * - Only uses lambda_down[0] and h_down[0] (transducer layer only)
- * - Strips eta_down, h_up, niu, alpha_t (not used in anisotropic)
+ * The anisotropic model treats thermal conductivity as direction-dependent and
+ * requires elastic constants (Cij) for both the transducer and sample materials.
+ *
+ * Key differences from the isotropic payload:
+ * - Only the first "down" layer is used (transducer); the sample is described
+ *   by its own set of directional conductivities and elastic constants.
+ * - eta_down, h_up, niu, alpha_t are not needed and are omitted.
+ * - Additional unit conversions:
+ *     rho, rho_sample: g/cm³ -> kg/m³  (×1e3)
+ *     C11, C12, C44, etc.: GPa -> Pa   (×1e9)
  */
 export function buildAnisotropicPayload(
   params: IsotropicParams,

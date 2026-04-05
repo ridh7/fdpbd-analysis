@@ -1,3 +1,4 @@
+/** Anisotropic sample parameters: direction-dependent thermal conductivities (sigma_x, sigma_y, sigma_z), elastic stiffness tensor (C11-C44), density, and per-direction thermal expansion. Shown in anisotropic and transverse isotropic modes. */
 import type { IsotropicParams, AnisotropicExtra } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 

@@ -1,3 +1,14 @@
+/**
+ * Hover-triggered info tooltip — a small "?" icon that reveals a popover
+ * with rich content (formatted text, code blocks, etc.) on mouse hover.
+ *
+ * Uses Tailwind's group/group-hover pattern for pure-CSS hover detection —
+ * no state, no event listeners, no JS. The popover fades in with a 150ms
+ * opacity transition and gets pointer-events only when visible (so it
+ * doesn't block clicks when hidden).
+ *
+ * Used by: FileUpload (to show expected data file format)
+ */
 interface InfoTooltipProps {
   children: React.ReactNode;
 }

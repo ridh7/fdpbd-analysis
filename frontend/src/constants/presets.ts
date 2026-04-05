@@ -1,7 +1,22 @@
+/**
+ * Hardware presets for lens, medium, and laser configurations.
+ *
+ * These let users quickly populate beam/optics parameters by selecting
+ * a known hardware setup instead of entering values manually. Each preset
+ * maps to the subset of IsotropicParams it controls. The "custom" option
+ * in each type allows free-form entry (not stored here).
+ *
+ * Consumed by: PresetSelector dropdowns in the parameter form.
+ */
 export type LensOption = "5x" | "10x" | "20x" | "custom";
 export type MediumOption = "air" | "custom";
 export type LaserOption = "TOPS 1" | "TOPS 2" | "custom";
 
+/**
+ * Objective lens presets — each magnification determines the beam spot size
+ * (w_rms), pump-probe offset (x_offset), lens transmission loss, and
+ * the detector calibration factor. Higher magnification = smaller spot.
+ */
 export const LENS_PRESETS: Record<
   Exclude<LensOption, "custom">,
   {
@@ -31,6 +46,10 @@ export const LENS_PRESETS: Record<
   },
 };
 
+/**
+ * Upper medium presets — thermal properties of the medium above the sample.
+ * Currently only "air" is defined; water immersion or vacuum could be added.
+ */
 export const MEDIUM_PRESETS: Record<
   Exclude<MediumOption, "custom">,
   {
@@ -48,6 +67,10 @@ export const MEDIUM_PRESETS: Record<
   },
 };
 
+/**
+ * Laser system presets — TOPS 1 and TOPS 2 share the same parameters today
+ * but are kept separate to allow future calibration differences.
+ */
 export const LASER_PRESETS: Record<
   Exclude<LaserOption, "custom">,
   {

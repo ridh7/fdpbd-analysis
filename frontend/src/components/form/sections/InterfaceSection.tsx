@@ -1,3 +1,4 @@
+/** Interface/adhesion layer parameters: thermal conductivity and thickness of the thin bonding layer between transducer and sample (isotropic mode only). */
 import type { IsotropicParams } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 

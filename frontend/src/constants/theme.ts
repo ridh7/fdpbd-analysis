@@ -1,5 +1,18 @@
+/**
+ * Theme system for the FDPBD analysis UI.
+ *
+ * Defines dark and light color palettes as TypeScript objects, then applies
+ * them as CSS custom properties on :root via `applyTheme()`. This approach
+ * lets components use `var(--bg-primary)` etc. in plain CSS / inline styles
+ * without needing a React context re-render for every themed element.
+ *
+ * Color values reference Tailwind's gray/blue/red/green scales for consistency.
+ *
+ * Consumed by: ThemeToggle component and the app's root initialization.
+ */
 export type Theme = "dark" | "light";
 
+/** Every color token the app needs — grouped by usage area. */
 export interface ThemePalette {
   // Backgrounds
   bgPrimary: string;
@@ -10,6 +23,7 @@ export interface ThemePalette {
   // Borders
   borderPrimary: string;
   borderInput: string;
+  borderFocus: string;
 
   // Text
   textPrimary: string;
@@ -46,6 +60,9 @@ export interface ThemePalette {
   plotBg: string;
   plotFont: string;
   plotGridline: string;
+  plotInPhase: string;
+  plotOutPhase: string;
+  plotRatio: string;
 
   // Mode selector
   modeBtnBg: string;
@@ -63,6 +80,7 @@ export const darkTheme: ThemePalette = {
 
   borderPrimary: "#374151", // gray-700
   borderInput: "#4b5563", // gray-600
+  borderFocus: "#3b82f6", // blue-500
 
   textPrimary: "#ffffff",
   textSecondary: "#d1d5db", // gray-300
@@ -93,6 +111,9 @@ export const darkTheme: ThemePalette = {
   plotBg: "#111827", // gray-900, distinct from gray-800 card
   plotFont: "#d1d5db",
   plotGridline: "#374151", // gray-700
+  plotInPhase: "#60a5fa", // blue-400 (brighter on dark bg)
+  plotOutPhase: "#f87171", // red-400
+  plotRatio: "#4ade80", // green-400
 
   modeBtnBg: "#374151", // gray-700
   modeBtnActiveBg: "#3b82f6", // blue-600
@@ -109,6 +130,7 @@ export const lightTheme: ThemePalette = {
 
   borderPrimary: "#e5e7eb", // gray-200
   borderInput: "#d1d5db", // gray-300
+  borderFocus: "#3b82f6", // blue-500
 
   textPrimary: "#111827", // gray-900
   textSecondary: "#4b5563", // gray-600
@@ -139,6 +161,9 @@ export const lightTheme: ThemePalette = {
   plotBg: "#f3f4f6", // gray-100, distinct from gray-50 card
   plotFont: "#374151",
   plotGridline: "#e5e7eb", // gray-200
+  plotInPhase: "#2563eb", // blue-600 (darker on light bg)
+  plotOutPhase: "#dc2626", // red-600
+  plotRatio: "#16a34a", // green-600
 
   modeBtnBg: "#e5e7eb",
   modeBtnActiveBg: "#3b82f6",
@@ -155,7 +180,6 @@ const themes: Record<Theme, ThemePalette> = { dark: darkTheme, light: lightTheme
 export function applyTheme(theme: Theme): void {
   const palette = themes[theme];
   const root = document.documentElement;
-  root.setAttribute("data-theme", theme);
 
   for (const [key, value] of Object.entries(palette)) {
     // Convert camelCase to kebab-case: bgPrimary -> --bg-primary

@@ -1,3 +1,4 @@
+/** Transducer optical constants: refractive index (n_al) and extinction coefficient (k_al) of the thin metal film (typically aluminum). */
 import type { IsotropicParams } from "../../../schemas/params";
 import { ParamInput } from "../ParamInput";
 
