@@ -298,14 +298,9 @@ async def fit_anisotropic(
         ) from e
 
     content = await file.read()
-    # StreamingResponse wraps the async generator — FastAPI sends each yielded
-    # string as a chunk of the HTTP response body.
-    # Cache-Control: no-cache — prevents proxies from buffering SSE events
-    # X-Accel-Buffering: no — disables nginx response buffering (if behind nginx)
     return StreamingResponse(
         _run_fit_sse(run_anisotropic_fit, validated_params, content),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
@@ -327,5 +322,4 @@ async def fit_transverse(
     return StreamingResponse(
         _run_fit_sse(run_transverse_fit, validated_params, content),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
