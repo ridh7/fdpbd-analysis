@@ -1,7 +1,45 @@
-"""Differential evolution fitting for anisotropic and transverse isotropic models.
+"""
+Differential Evolution (DE) fitting for anisotropic and transverse isotropic models.
 
-Runs DE optimization with a callback that pushes progress events to a queue,
-enabling SSE streaming to the frontend.
+## Why DE instead of least_squares (used in isotropic)?
+Isotropic fitting has 2 unknowns (λ, coef) with a smooth, well-behaved cost
+surface → gradient-based least_squares converges quickly. Anisotropic/transverse
+fitting varies ONE parameter at a time (e.g., σ_z) but the cost surface can have
+local minima due to the complex thermo-elastic coupling. DE is a global optimizer
+that searches the entire parameter space without needing gradients.
+
+## How Differential Evolution works:
+1. Create a "population" of candidate solutions (random values within bounds)
+2. For each candidate, create a "mutant" by combining other candidates:
+   mutant = candidate_a + mutation_factor × (candidate_b - candidate_c)
+3. Mix the mutant with the original ("crossover") to create a "trial"
+4. If the trial is better (lower cost), it replaces the original
+5. Repeat for max_iterations "generations"
+
+The "best1bin" strategy (used here) always uses the BEST candidate as
+candidate_a, which converges faster but is more prone to local minima than
+pure random strategies.
+
+## SSE streaming:
+The DE callback fires after each generation, pushing a ProgressEvent to the
+caller (fitting_service.py), which serializes it as an SSE message to the
+frontend. This is how the FittingProgress component shows real-time updates.
+
+## Why are objective functions top-level (not closures)?
+scipy's differential_evolution with workers > 1 uses multiprocessing, which
+requires pickling the objective function. Python can't pickle closures or
+lambdas — only top-level (module-scope) functions. Even though we currently
+use workers=1, keeping them top-level allows switching to parallel DE later.
+
+## Python imports used:
+- copy.deepcopy(): creates a fully independent copy of nested dicts. Needed
+  because each DE trial modifies layer2's parameter — without deepcopy, all
+  trials would share the same dict and corrupt each other's values.
+- @dataclass: auto-generates __init__, __repr__, __eq__ from field annotations.
+  Lighter than Pydantic (no validation overhead) for internal data structures
+  that never cross an API boundary.
+- Callable[[ProgressEvent], None]: type hint for "a function that takes a
+  ProgressEvent and returns nothing" — the callback pattern.
 """
 
 import copy
@@ -40,39 +78,50 @@ from app.models.fitting import AnisotropicFitParams, TransverseFitParams
 
 @dataclass
 class ProgressEvent:
-    """Progress update from DE callback."""
+    """Progress update sent to the frontend after each DE generation.
 
-    generation: int
-    max_generations: int
-    best_value: float
-    convergence: float
-    elapsed_s: float
+    Serialized as an SSE message by fitting_service.py → consumed by
+    the FittingProgress component in the frontend.
+    """
+
+    generation: int           # current generation number (1-indexed)
+    max_generations: int      # total generations requested
+    best_value: float         # current best parameter value found so far
+    convergence: float        # scipy's convergence metric (0 = not converged, 1 = done)
+    elapsed_s: float          # wall-clock time since fitting started
 
 
 @dataclass
 class FitResult:
-    """Final result of a DE fitting run."""
+    """Final result of a DE fitting run.
 
-    fitted_param_name: str
-    fitted_param_value: float
-    final_cost: float
-    total_time_s: float
-    message: str
-    # Forward model output with fitted param
+    Contains both the fitted parameter AND the full forward model output
+    computed with that parameter, so the frontend can immediately plot
+    the best-fit curves without a separate API call.
+    """
+
+    fitted_param_name: str      # which layer2 key was fitted (e.g., "sigma_z")
+    fitted_param_value: float   # best-fit value found by DE
+    final_cost: float           # final SSD (sum of squared differences)
+    total_time_s: float         # total wall-clock time for the fit
+    message: str                # scipy's termination message
+    # Forward model output computed with the fitted parameter
     model_freqs: list[float]
     in_model: list[float]
     out_model: list[float]
     ratio_model: list[float]
+    # Experimental data (echoed back for plotting convenience)
     exp_freqs: list[float]
     in_exp: list[float]
     out_exp: list[float]
     ratio_exp: list[float]
+    # Peak analysis on the fitted model
     f_peak: float | None
     ratio_at_peak: float | None
 
 
 # ---------------------------------------------------------------------------
-# Top-level objective functions (must be picklable for workers=-1)
+# Objective functions — top-level for pickle compatibility (see module docstring)
 # ---------------------------------------------------------------------------
 
 
@@ -88,21 +137,34 @@ def _aniso_objective(
     v_corr_in: NDArray,
     v_corr_out: NDArray,
 ) -> float:
-    """Anisotropic objective: evaluate model at exp freqs, return SSD."""
+    """
+    Anisotropic objective function: called once per DE candidate per generation.
+
+    1. Deep-copy the base params (so this trial doesn't corrupt others)
+    2. Set layer2[key] = the candidate value being tested
+    3. Run the FULL forward model (surface displacement → deflection → lock-in)
+    4. Return SSD = Σ(model - experiment)² for both in-phase and out-of-phase
+
+    The DE optimizer MINIMIZES this value — lower SSD means better fit.
+    Returns 1e12 (a penalty) if the model produces NaN (numerical failure).
+    """
     trial_params = copy.deepcopy(transformed)
     trial_layer2 = copy.deepcopy(base_layer2)
-    trial_layer2[layer2_key] = param_value[0]
+    trial_layer2[layer2_key] = param_value[0]  # param_value is a 1-element array
     trial_params["layer2"] = trial_layer2
 
+    # Run the full anisotropic forward model pipeline
     Z = aniso_surface(freq, p_vals, psi_vals, trial_params, parallel=True)
     pbd_angles = aniso_probe(Z, p_vals, psi_vals, freq, trial_params)
     in_mod, out_mod, _ = aniso_lockin(
         pbd_angles, v_sum_avg, trial_params["detector_factor"]
     )
 
+    # Penalty for numerical failure — steer optimizer away from bad regions
     if np.isnan(in_mod).any() or np.isnan(out_mod).any():
         return 1e12
 
+    # SSD: sum of squared differences between model and experiment
     ssd_in = float(np.sum((in_mod - v_corr_in) ** 2))
     ssd_out = float(np.sum((out_mod - v_corr_out) ** 2))
     return ssd_in + ssd_out
@@ -126,7 +188,11 @@ def _trans_objective(
     v_corr_in_middle: NDArray,
     v_corr_out_middle: NDArray,
 ) -> float:
-    """Transverse objective: evaluate model at exp freqs, return SSD."""
+    """
+    Transverse objective function — same pattern as _aniso_objective but
+    uses the transverse forward model (1D integration, no ψ loop).
+    Compares against middle-point experimental data only.
+    """
     trial_layer2 = copy.deepcopy(base_layer2)
     trial_layer2[layer2_key] = param_value[0]
 
@@ -146,7 +212,7 @@ def _trans_objective(
 
 
 # ---------------------------------------------------------------------------
-# Public API
+# Public API — called by fitting_service.py
 # ---------------------------------------------------------------------------
 
 
@@ -155,10 +221,23 @@ def run_anisotropic_fit(
     data_filepath: str | Path,
     on_progress: Callable[[ProgressEvent], None],
 ) -> FitResult:
-    """Run DE fitting for anisotropic model."""
+    """
+    Run DE fitting for the anisotropic model.
+
+    Pipeline:
+    1. Set up params and load/correct data (same as run_anisotropic_analysis)
+    2. Run scipy.optimize.differential_evolution with _aniso_objective
+    3. After convergence, run one final forward model with the fitted value
+    4. Return FitResult with fitted param + model curves + peak analysis
+
+    Args:
+        on_progress: callback invoked after each DE generation — the fitting
+            service pushes these to the SSE stream for the frontend.
+    """
     data_filepath = Path(data_filepath)
     fit_config = params.fit_config
 
+    # Same param transformation as run_anisotropic_analysis
     transformed: dict[str, Any] = {
         "f_rolloff": params.f_rolloff,
         "delay_1": params.delay_1,
@@ -203,7 +282,7 @@ def run_anisotropic_fit(
         },
     }
 
-    # Load and correct data
+    # --- Load and correct experimental data ---
     v_out, v_in, _, v_sum, freq = load_data(data_filepath)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
@@ -211,7 +290,7 @@ def run_anisotropic_fit(
     v_corr_in, v_corr_out, v_corr_ratio = correct_data(v_out, v_in, complex_leaking)
     v_sum_avg = float(np.mean(v_sum))
 
-    # Build grids
+    # --- Build spatial frequency and angle grids ---
     n_p = 63
     n_psi = 45
     model_freqs = np.logspace(np.log10(100e3), np.log10(100), 10)
@@ -221,7 +300,7 @@ def run_anisotropic_fit(
     p_vals = np.linspace(d_p, up_p, n_p)
     psi_vals = np.linspace(0, np.pi / 2, n_psi)
 
-    # Validate fit parameter
+    # --- Validate and prepare the parameter being fitted ---
     layer2_key = fit_config.parameter_to_fit
     if layer2_key not in transformed["layer2"]:
         raise ValueError(
@@ -229,7 +308,8 @@ def run_anisotropic_fit(
             f"Must be one of: {list(transformed['layer2'].keys())}"
         )
 
-    # Apply fixed values to base layer2
+    # Start from a copy of layer2 with any user-specified fixed values applied.
+    # The DE optimizer will ONLY vary layer2[layer2_key] — everything else stays fixed.
     base_layer2 = copy.deepcopy(transformed["layer2"])
     for key, value in fit_config.fixed_values.items():
         if key in base_layer2:
@@ -239,6 +319,7 @@ def run_anisotropic_fit(
     iteration_count = 0
 
     def callback(xk: NDArray, convergence: float) -> None:
+        """Called by scipy after each DE generation. Fires SSE progress event."""
         nonlocal iteration_count
         iteration_count += 1
         on_progress(
@@ -251,6 +332,7 @@ def run_anisotropic_fit(
             )
         )
 
+    # Extra args passed to _aniso_objective after param_value
     de_args = (
         layer2_key,
         base_layer2,
@@ -263,25 +345,28 @@ def run_anisotropic_fit(
         v_corr_out,
     )
 
+    # --- Run Differential Evolution ---
     result = differential_evolution(
         _aniso_objective,
-        bounds=[(fit_config.bounds_min, fit_config.bounds_max)],
-        args=de_args,
-        strategy="best1bin",
+        bounds=[(fit_config.bounds_min, fit_config.bounds_max)],  # 1D bounds
+        args=de_args,           # extra args to objective function
+        strategy="best1bin",    # mutation uses best candidate + binomial crossover
         maxiter=fit_config.max_iterations,
-        popsize=fit_config.population_size,
-        tol=fit_config.tolerance,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        callback=callback,
-        workers=1,
-        updating="immediate",
+        popsize=fit_config.population_size,  # candidates per generation
+        tol=fit_config.tolerance,            # convergence tolerance
+        mutation=(0.5, 1),      # dithered mutation factor (random in [0.5, 1])
+        recombination=0.7,      # crossover probability
+        callback=callback,      # fires after each generation
+        workers=1,              # serial (objective already uses multiprocessing)
+        updating="immediate",   # update population as soon as better candidate found
     )
 
     total_time = time.time() - start_time
     fitted_value = float(result.x[0])
 
-    # Run final forward model with fitted parameter
+    # --- Final forward model with fitted parameter ---
+    # Run one more time at the model frequency grid (not experimental freqs)
+    # to get smooth curves for plotting.
     final_params = copy.deepcopy(transformed)
     final_layer2 = copy.deepcopy(base_layer2)
     final_layer2[layer2_key] = fitted_value
@@ -319,18 +404,23 @@ def run_transverse_fit(
     data_filepath: str | Path,
     on_progress: Callable[[ProgressEvent], None],
 ) -> FitResult:
-    """Run DE fitting for transverse isotropic model."""
+    """
+    Run DE fitting for the transverse isotropic model.
+
+    Same structure as run_anisotropic_fit but uses the transverse forward
+    model (faster, 1D integration) and middle-point experimental data.
+    """
     data_filepath = Path(data_filepath)
     fit_config = params.fit_config
 
-    # Load and correct data
+    # --- Load and correct data ---
     v_out, v_in, _, v_sum, freq = load_data(data_filepath)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
     )
     v_corr_in, v_corr_out, v_corr_ratio = correct_data(v_out, v_in, complex_leaking)
 
-    # Select middle points
+    # Select middle points (same logic as run_transverse_analysis)
     num_points = len(freq)
     num_middle = params.num_middle_points
     if num_points >= num_middle:
@@ -346,7 +436,7 @@ def run_transverse_fit(
         v_corr_out_middle = v_corr_out
         v_corr_ratio_middle = v_corr_ratio
 
-    # Compute A0
+    # Compute absorbed pump power (same Fresnel formula as everywhere)
     refl_al = (
         abs((params.n_al - 1 + 1j * params.k_al) / (params.n_al + 1 + 1j * params.k_al))
         ** 2
@@ -392,7 +482,7 @@ def run_transverse_fit(
         "capac": params.layer3_capac,
     }
 
-    # Validate fit parameter
+    # Validate and prepare fit parameter (same pattern as anisotropic)
     layer2_key = fit_config.parameter_to_fit
     if layer2_key not in base_layer2:
         raise ValueError(
@@ -400,7 +490,6 @@ def run_transverse_fit(
             f"Must be one of: {list(base_layer2.keys())}"
         )
 
-    # Apply fixed values
     for key, value in fit_config.fixed_values.items():
         if key in base_layer2:
             base_layer2[key] = value
@@ -439,6 +528,7 @@ def run_transverse_fit(
         v_corr_out_middle,
     )
 
+    # Same DE settings as anisotropic
     result = differential_evolution(
         _trans_objective,
         bounds=[(fit_config.bounds_min, fit_config.bounds_max)],
@@ -457,7 +547,7 @@ def run_transverse_fit(
     total_time = time.time() - start_time
     fitted_value = float(result.x[0])
 
-    # Run final forward model with fitted parameter
+    # Final forward model with fitted parameter (for plotting)
     final_layer2 = copy.deepcopy(base_layer2)
     final_layer2[layer2_key] = fitted_value
 

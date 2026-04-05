@@ -1,7 +1,29 @@
-"""Transverse isotropic FD-PBD analysis: thermo-elastic surface displacement.
+"""
+Transverse isotropic FD-PBD analysis: thermo-elastic surface displacement.
 
-Uses single psi=pi/4 and Bessel J1 kernel (simplified vs full anisotropic).
-Adapted from fdpbd_analysis/main_3.py (MATLAB code2 translation).
+## How this differs from full anisotropic:
+The full anisotropic model integrates over BOTH spatial frequency p AND
+azimuthal angle ψ (a 2D integral). Transverse isotropy means the material
+has a symmetry axis — properties are the same in all directions perpendicular
+to that axis. This symmetry allows two simplifications:
+
+1. **Single ψ = π/4**: instead of integrating over ψ ∈ [0, π/2], we evaluate
+   at one representative angle. This reduces a 2D integral to 1D.
+2. **Bessel J1 kernel**: instead of the general angular sensitivity function
+   g(p,ψ), we use the Bessel function J1(p·r₀), which is the azimuthally
+   averaged version. This is valid because the response is symmetric.
+
+These simplifications make transverse ~10× faster than full anisotropic.
+
+## Two conductivities instead of three:
+- σ_r (radial, in-plane) — same in x and y due to symmetry
+- σ_z (axial, through-plane) — different from σ_r
+
+Compare: anisotropic has σ_x, σ_y, σ_z (all potentially different).
+
+## scipy.special import:
+- sp.jv(1, x): Bessel function of the first kind, order 1 (same as j1 but
+  accessed via the general jv interface). Used for the deflection kernel.
 """
 
 import time
@@ -23,7 +45,12 @@ from app.models.transverse_isotropic import (
 
 
 def _safe_div(num: complex, den: complex) -> complex:
-    """Safe division avoiding zero denominators."""
+    """Safe division avoiding zero denominators.
+
+    Unlike anisotropic (which skips degenerate cases via try/except),
+    transverse uses explicit guards because the single-ψ evaluation
+    hits edge cases more often (fewer points to average over).
+    """
     if den == 0:
         return complex(np.inf * np.sign(num.real)) if num != 0 else complex(0)
     return num / den
@@ -37,7 +64,14 @@ def _precompute_constants(
     w_rms: float,
     g_int: float,
 ) -> dict[str, float | complex]:
-    """Precompute elastic and thermal constants for the eigenvalue solver."""
+    """Precompute elastic and thermal constants for the eigenvalue solver.
+
+    Same structure as anisotropic _precompute_constants, but:
+    - Uses σ_r/σ_z ratio instead of separate σ_x/σ_z and σ_y/σ_z
+    - Layer 2 keeps its natural coordinate system (symmetry axis along z,
+      not remapped to y like in anisotropic)
+    - Fixed ψ = π/4 stored in the dict
+    """
     Dif1 = layer1["sigma"] / layer1["capac"]
     Dif2 = layer2["sigma_z"] / layer2["capac"]
     Dif3 = layer3["sigma"] / layer3["capac"]
@@ -131,7 +165,14 @@ def _compute_single_freq(
     p_vals: NDArray[np.float64],
     pc: dict[str, float | complex],
 ) -> tuple[int, NDArray[np.complex128]]:
-    """Compute Z[:, i_f] for one frequency (transverse isotropic)."""
+    """
+    Compute Z[p] for one frequency (transverse isotropic).
+
+    Same eigenvalue + boundary condition approach as anisotropic, but:
+    - No ψ loop (fixed at π/4) → Z_slice is 1D (just p), not 2D (p × ψ)
+    - Uses _safe_div instead of try/except for division-by-zero handling
+    - Not parallelized (fast enough to run serially)
+    """
     n_p = len(p_vals)
     Z_slice = np.zeros(n_p, dtype=complex)
 
@@ -166,7 +207,8 @@ def _compute_single_freq(
         zeta2 = np.sqrt(qn2_2 + p**2 * sigma_r_over_z)
         zeta3 = np.sqrt(qn2_3 + p**2)
 
-        # Thermal boundary condition: G
+        # Thermal Green's function (same physics as anisotropic, but with
+        # explicit zero-division guards instead of letting numpy handle it)
         z1L = zeta1 * L1
         s1z = sigma1 * zeta1
         s2z = sigma2z * zeta2
@@ -405,15 +447,19 @@ def compute_surface_displacement(
     layer2: dict[str, float],
     layer3: dict[str, float],
 ) -> NDArray[np.complex128]:
-    """Build and solve 9x9 thermo-elastic BC system for transverse isotropic case.
+    """
+    Compute surface displacement Z(p, ω) for all frequencies.
 
-    Returns Z[n_p, n_f] complex surface displacement.
+    Unlike anisotropic (which uses multiprocessing.Pool), transverse runs
+    serially because the single-ψ evaluation makes each frequency ~45× cheaper.
+
+    Returns Z[n_p, n_f]: 2D complex array (no ψ dimension).
     """
     n_p, n_f = len(p_vals), len(freqs)
 
     pc = _precompute_constants(layer1, layer2, layer3, a0, w_rms, g_int)
 
-    # Transverse isotropic is lightweight (single psi), run serially
+    # Single-ψ means each frequency is fast enough to run serially
     Z = np.zeros((n_p, n_f), dtype=complex)
     for i_f, f in enumerate(freqs):
         _, Z_slice = _compute_single_freq(i_f, f, p_vals, pc)
@@ -430,7 +476,17 @@ def compute_probe_deflection(
     r_0: float,
     c_probe: float,
 ) -> NDArray[np.complex128]:
-    """Integrate Z(p,f) using Bessel J1 kernel for transverse isotropy."""
+    """
+    Integrate Z(p, ω) over p using Bessel J1 kernel to get deflection angles.
+
+    This is the 1D version of anisotropic's compute_probe_deflection — no ψ
+    integral needed because transverse isotropy's azimuthal symmetry collapses
+    it into the J1 Bessel function (the azimuthal average of the angular
+    sensitivity function g).
+
+    Uses Simpson's rule when possible (odd n_p ≥ 3), falls back to trapezoidal.
+    Non-finite values (from numerical overflow) are zeroed out before integrating.
+    """
     n_p, n_f = Z.shape
     d_p = p_vals[1] - p_vals[0] if n_p > 1 else 0
 
@@ -439,11 +495,13 @@ def compute_probe_deflection(
     for i_f in range(n_f):
         integrand_p = np.zeros(n_p, dtype=complex)
         for i_p, p in enumerate(p_vals):
+            # J1(p·r₀): Bessel function replaces the 2D angular sensitivity
             bessel_term = -sp.jv(1, p * r_0)
             integrand_p[i_p] = (
                 Z[i_p, i_f] * np.exp(-(w_rms**2) * p**2 / 8) * bessel_term * p**2
             )
 
+        # Guard against NaN/Inf from numerical overflow
         finite_mask = np.isfinite(integrand_p)
         if not np.all(finite_mask):
             if not np.any(finite_mask):
@@ -451,6 +509,7 @@ def compute_probe_deflection(
                 continue
             integrand_p[~finite_mask] = 0.0
 
+        # Simpson's rule (O(h⁴)) preferred; trapezoidal as fallback
         if n_p >= 3 and n_p % 2 != 0:
             angles[i_f] = c_probe / np.pi * simpson_integration(integrand_p, d_p)
         elif n_p > 0:
@@ -464,13 +523,21 @@ def compute_lockin_signals(
     v_sum_fixed: float,
     detector_gain: float,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
-    """Convert deflection angles into lock-in signals."""
+    """
+    Convert deflection angles to simulated lock-in signals.
+
+    Same as anisotropic compute_lockin_signals but with:
+    - 2.0 scaling factor instead of 0.5 (different normalization convention)
+    - Stricter zero-guards using 1e-15 threshold instead of exact == 0
+    - Extra guard: if in_phase is also ~0, ratio is set to 0.0 (not NaN)
+    """
     raw = angles / np.sqrt(2) * 2.0 * detector_gain * v_sum_fixed
     in_phase = np.abs(np.real(raw))
     out_of_phase = -np.imag(raw)
     ratio = np.full_like(in_phase, np.nan)
     nonzero_mask = np.abs(out_of_phase) > 1e-15
     ratio[nonzero_mask] = -in_phase[nonzero_mask] / out_of_phase[nonzero_mask]
+    # If both in-phase and out-of-phase are ~0, ratio is 0 (not 0/0 = NaN)
     zero_inphase_mask = np.abs(in_phase) < 1e-15
     ratio[nonzero_mask & zero_inphase_mask] = 0.0
     return in_phase, out_of_phase, ratio
@@ -479,7 +546,16 @@ def compute_lockin_signals(
 def run_transverse_analysis(
     params: TransverseParams, data_filepath: Path
 ) -> TransverseResult:
-    """Run transversely isotropic FD-PBD analysis."""
+    """
+    Run the full transverse isotropic analysis pipeline.
+
+    Same structure as run_anisotropic_analysis (forward model only, no
+    least-squares fitting), but with two differences:
+    1. Uses "middle points" — a subset of frequencies from the center of
+       the experimental data, controlled by params.num_middle_points
+    2. Model frequency range and grid size are configurable via params
+       (anisotropic hardcodes them)
+    """
     # 1. Load & correct experimental data
     v_out, v_in, _, v_sum, freq = load_data(data_filepath)
     complex_leaking = calculate_leaking(
@@ -487,7 +563,9 @@ def run_transverse_analysis(
     )
     v_corr_in, v_corr_out, v_corr_ratio = correct_data(v_out, v_in, complex_leaking)
 
-    # 2. Select middle points for comparison
+    # 2. Select middle points — use only the central portion of the frequency
+    # range for comparison. This avoids noisy edge data (low-freq drift,
+    # high-freq roll-off) and focuses on the most reliable measurements.
     num_points = len(freq)
     num_middle = params.num_middle_points
     if num_points >= num_middle:

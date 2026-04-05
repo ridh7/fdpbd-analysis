@@ -1,93 +1,103 @@
+# Python equivalent of package.json — project metadata, dependencies, and all
+# tool configurations in one file. Replaces what would be package.json +
+# .eslintrc + .prettierrc + tsconfig.json + jest.config.js in a Node project.
+
+# ─── Project metadata & runtime dependencies ───────────────────────────────────
 [project]
 name = "fdpbd-analysis-backend"
 version = "0.1.0"
 description = "FastAPI backend for FD-PBD thermal analysis"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.34.0",
-    "python-multipart>=0.0.20",
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.7.0",
-    "numpy>=2.0.0",
-    "scipy>=1.14.0",
+    "fastapi>=0.115.0",            # web framework (defines routes, validation, docs)
+    "uvicorn[standard]>=0.34.0",   # ASGI server that actually runs the FastAPI app
+                                    # [standard] adds websocket support + hot-reload
+    "python-multipart>=0.0.20",    # required for Form() and File() — FastAPI doesn't
+                                    # include multipart/form-data parsing by default
+    "pydantic>=2.10.0",            # data validation via type hints (like Zod)
+    "pydantic-settings>=2.7.0",    # reads settings from env vars (used in config.py)
+    "numpy>=2.0.0",                # array math — backbone of all physics computation
+    "scipy>=1.14.0",               # scientific computing (least_squares, differential_evolution)
 ]
 
+# ─── Optional deps: install with pip install -e ".[dev,test]" ───────────────────
 [project.optional-dependencies]
-dev = [
-    "ruff>=0.8.0",
-    "mypy>=1.13.0",
-]
+dev = ["ruff>=0.8.0", "mypy>=1.13.0"]  # ruff = linter+formatter (ESLint+Prettier combined)
+                                         # mypy = type checker (like tsc --noEmit)
 test = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "pytest-cov>=6.0",
-    "httpx>=0.28",
+    "pytest>=8.0",             # test runner (like vitest/jest)
+    "pytest-asyncio>=0.24",    # lets pytest run async test functions
+    "pytest-cov>=6.0",         # code coverage reports
+    "httpx>=0.28",             # async HTTP client for testing FastAPI endpoints
 ]
 
+# ─── Package discovery ──────────────────────────────────────────────────────────
 [tool.setuptools]
-packages = ["app"]
+packages = ["app"]  # tells pip which directory contains the actual code
 
+# ─── Pytest configuration ───────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
-addopts = "-v --tb=short"
+testpaths = ["tests"]       # where to look for test files
+asyncio_mode = "auto"       # auto-detect async tests (no @pytest.mark.asyncio needed)
+addopts = "-v --tb=short"   # -v = verbose, --tb=short = short tracebacks on failure
 
+# ─── Ruff: linter + formatter (replaces flake8, isort, black) ──────────────────
 [tool.ruff]
-line-length = 88
-target-version = "py310"
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-]
+line-length = 88              # max line width (Black's default, a Python convention)
+target-version = "py310"      # assume Python 3.10 syntax
+exclude = [".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"]
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
+    "E",   # pycodestyle errors (indentation, whitespace)
     "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "UP",  # pyupgrade
-    "C4",  # flake8-comprehensions
-    "SIM", # flake8-simplify
-    "N",   # pep8-naming
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering: stdlib → third-party → local)
+    "B",   # flake8-bugbear (common bugs: mutable default args, assert on tuples)
+    "UP",  # pyupgrade (suggests modern Python syntax: dict() → {})
+    "C4",  # flake8-comprehensions (better list/dict comprehensions)
+    "SIM", # flake8-simplify (unnecessary else after return, etc.)
+    "N",   # pep8-naming (functions_lowercase, ClassesCamelCase)
 ]
 ignore = [
-    "E501",  # line too long (handled by ruff format)
+    "E501", # line too long — ruff's formatter handles line wrapping instead
 ]
 
+# Treat "app" as our code so imports sort as: stdlib → numpy/fastapi → app.*
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 
+# Per-file lint exceptions — suppress rules that conflict with domain conventions
 [tool.ruff.lint.per-file-ignores]
-"app/core/**/*.py" = ["N806", "N803"]  # Scientific variables use specific capitalization
-"app/models/*.py" = ["N815"]  # Pydantic field names match API contract
-"app/routers/*.py" = ["B008"]  # FastAPI uses Depends()/File()/Form() as defaults
+"app/core/**/*.py" = [
+    "N806",  # allow uppercase variables in functions (C11, C44, alphaT match physics literature)
+    "N803",  # allow uppercase function arguments (same reason)
+] # Scientific variables use specific capitalization
+"app/models/*.py" = ["N815"] # Pydantic field names match API contract (mixedCase like alphaT)
+"app/routers/*.py" = ["B008"] # FastAPI uses Depends()/File()/Form() as defaults — not a bug
 
 [tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-line-ending = "auto"
+quote-style = "double"   # "hello" not 'hello'
+indent-style = "space"   # spaces not tabs
+line-ending = "auto"     # \n on mac/linux, \r\n on windows
 
+# ─── Mypy: static type checker ─────────────────────────────────────────────────
 [tool.mypy]
 python_version = "3.10"
-mypy_path = "$MYPY_CONFIG_FILE_DIR"
-explicit_package_bases = true
-warn_return_any = true
-warn_unused_configs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-show_error_codes = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR"   # resolve imports relative to this file's directory
+explicit_package_bases = true          # treat "app" as a package root
+warn_return_any = true                 # flag functions that return Any (lose type safety)
+warn_unused_configs = true             # warn if a config option has no effect
+check_untyped_defs = true              # type-check bodies even without annotations
+no_implicit_optional = true            # def f(x: str = None) is error — must be str | None
+warn_redundant_casts = true            # flag unnecessary cast() calls
+warn_unused_ignores = true             # flag # type: ignore that aren't needed
+warn_no_return = true                  # flag functions missing a return statement
+warn_unreachable = true                # flag dead code after return/raise
+strict_equality = true                 # flag == between incompatible types
+show_error_codes = true                # show [error-code] for easier Googling
 
+# scipy has no type stubs (py.typed marker) — suppress import errors for it
 [[tool.mypy.overrides]]
 module = ["scipy", "scipy.*"]
 ignore_missing_imports = true
