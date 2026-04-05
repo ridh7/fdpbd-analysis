@@ -14,5 +14,5 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def sample_data_path() -> Path:
-    return FIXTURES_DIR / "sample_data.txt"
+def sample_data_bytes() -> bytes:
+    return (FIXTURES_DIR / "sample_data.txt").read_bytes()

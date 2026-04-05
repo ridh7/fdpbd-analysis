@@ -27,7 +27,6 @@ Compare: anisotropic has σ_x, σ_y, σ_z (all potentially different).
 """
 
 import time
-from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
@@ -544,7 +543,7 @@ def compute_lockin_signals(
 
 
 def run_transverse_analysis(
-    params: TransverseParams, data_filepath: Path
+    params: TransverseParams, file_content: bytes
 ) -> TransverseResult:
     """
     Run the full transverse isotropic analysis pipeline.
@@ -557,7 +556,7 @@ def run_transverse_analysis(
        (anisotropic hardcodes them)
     """
     # 1. Load & correct experimental data
-    v_out, v_in, _, v_sum, freq = load_data(data_filepath)
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
     )

@@ -46,7 +46,6 @@ import copy
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -218,7 +217,7 @@ def _trans_objective(
 
 def run_anisotropic_fit(
     params: AnisotropicFitParams,
-    data_filepath: str | Path,
+    file_content: bytes,
     on_progress: Callable[[ProgressEvent], None],
 ) -> FitResult:
     """
@@ -234,7 +233,6 @@ def run_anisotropic_fit(
         on_progress: callback invoked after each DE generation — the fitting
             service pushes these to the SSE stream for the frontend.
     """
-    data_filepath = Path(data_filepath)
     fit_config = params.fit_config
 
     # Same param transformation as run_anisotropic_analysis
@@ -283,7 +281,7 @@ def run_anisotropic_fit(
     }
 
     # --- Load and correct experimental data ---
-    v_out, v_in, _, v_sum, freq = load_data(data_filepath)
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
     )
@@ -401,7 +399,7 @@ def run_anisotropic_fit(
 
 def run_transverse_fit(
     params: TransverseFitParams,
-    data_filepath: str | Path,
+    file_content: bytes,
     on_progress: Callable[[ProgressEvent], None],
 ) -> FitResult:
     """
@@ -410,11 +408,10 @@ def run_transverse_fit(
     Same structure as run_anisotropic_fit but uses the transverse forward
     model (faster, 1D integration) and middle-point experimental data.
     """
-    data_filepath = Path(data_filepath)
     fit_config = params.fit_config
 
     # --- Load and correct data ---
-    v_out, v_in, _, v_sum, freq = load_data(data_filepath)
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
     )

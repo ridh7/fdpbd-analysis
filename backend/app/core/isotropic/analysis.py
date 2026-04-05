@@ -19,7 +19,6 @@ Each step delegates to a specialized module:
 The router calls this function, and the frontend receives the IsotropicResult.
 """
 
-from pathlib import Path
 
 import numpy as np
 
@@ -30,7 +29,7 @@ from .fitting import fit_in_out
 from .thermal_model import compute_steady_state_heat, delta_bo_theta
 
 
-def run_isotropic_analysis(params: IsotropicParams, data_filepath: Path) -> IsotropicResult:
+def run_isotropic_analysis(params: IsotropicParams, file_content: bytes) -> IsotropicResult:
     """Run the full isotropic analysis pipeline: load data → correct → fit → plot."""
 
     # --- Step 1: Convert Pydantic model fields to numpy arrays ---
@@ -65,7 +64,7 @@ def run_isotropic_analysis(params: IsotropicParams, data_filepath: Path) -> Isot
     a_dc = (params.incident_pump + params.incident_probe) * absorbed_pump
 
     # --- Step 3: Load experimental data and remove instrument distortion ---
-    v_out, v_in, _, v_sum, freq = load_data(data_filepath)
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
 
     # Leaking correction: undo the lock-in amplifier's frequency-dependent
     # gain roll-off and phase delay (see data_processing.py)

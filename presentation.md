@@ -106,7 +106,7 @@ Justifications vs alternatives:
 
 - useReducer over Redux / Zustand / Jotai: 30+ form fields with presets, mode switching, and resets. useReducer centralizes all transitions in one function with discriminated union actions — fully type-safe, zero dependencies. Redux would be overkill for a single-page app with no shared global state across routes.
 
-- FastAPI over Flask / Django: Native async support (needed for SSE streaming), built-in dependency injection (Depends()), auto-generated OpenAPI docs at /docs, and Pydantic integration for request/response validation. Flask would need extensions for all of these. Django is too heavy for an API-only backend.
+- FastAPI over Flask / Django: Native async support (needed for SSE streaming), auto-generated OpenAPI docs at /docs, and Pydantic integration for request/response validation. Flask would need extensions for all of these. Django is too heavy for an API-only backend.
 
 - SSE over WebSockets: DE fitting only needs server-to-client streaming (progress updates). SSE is simpler — no connection upgrade, no ping/pong, works over standard HTTP, auto-reconnects. WebSockets would be needed if the client needed to send messages mid-fit (e.g., adjusting parameters live), but it doesn't.
 
@@ -129,10 +129,10 @@ Browser (:5173)                          Server (:8000)
 │                    │   form-data      │                      │
 │  Form → Zod ───────┼─────────────────>│  Router → Pydantic   │
 │                    │                  │    ↓                 │
-│  Plotly charts  <──┼── JSON ──────────│  Service layer       │
-│                    │                  │    ↓                 │
-│  SSE consumer   <──┼── SSE stream ────│  Core physics engine │
-│  (async generator) │                  │  (NumPy + SciPy)     │
+│  Plotly charts  <──┼── JSON ──────────│  Core physics engine │
+│                    │                  │  (NumPy + SciPy)     │
+│  SSE consumer   <──┼── SSE stream ────│                      │
+│  (async generator) │                  │  All data in-memory  │
 └────────────────────┘                  └──────────────────────┘
 ```
 
@@ -140,18 +140,18 @@ Browser (:5173)                          Server (:8000)
 
 ## Architecture Decisions
 
-### Layered Backend: Router → Service → Core
+### Backend: Router → Core
 
-- **Router** — HTTP concerns only: parse multipart form, return response
-- **Service** — orchestration: temp file lifecycle, calling core functions, cleanup
-- **Core** — pure physics: no HTTP awareness, no file I/O knowledge
+- **Router** — HTTP concerns: parse multipart form, validate with Pydantic, read file into bytes, return response
+- **Core** — pure physics: receives raw bytes + validated params, runs analysis in-memory, returns result dataclass
+- No service layer — the router calls core functions directly. File data stays in memory as bytes (no temp files). The simplest architecture that fits the actual requirements.
 
 <!--
-Why layered architecture:
-- Each layer has a single responsibility and only depends on the layer below it — changes in one layer don't ripple through the others.
-- Testable at every level: unit test the core with raw inputs, integration test the service with mock files, API test the router with HTTP requests.
-- Swappable: you could replace the web framework (FastAPI → Django) without touching the physics code, or swap the physics engine without changing the API contract.
-- Easier to reason about: when debugging, you know exactly which layer to look at based on the symptom (bad HTTP response → router, file not cleaned up → service, wrong numbers → core).
+Why no service layer?
+- The service layer originally existed to manage temp file lifecycle (save → analyze → cleanup). Once we switched to in-memory processing (bytes → BytesIO → numpy), there was nothing left for it to do — each method was a one-line passthrough to the core function.
+- Similarly, DI (Depends()) existed so tests could inject a service with a different data_dir. With no temp files and no data_dir, there's nothing to inject.
+- Two layers (Router → Core) is the right level of complexity: the router handles HTTP, the core handles physics. Adding a middle layer that does nothing just adds indirection.
+- The core functions are still independently testable — pass bytes + params, get a result dataclass back. No HTTP, no framework dependency.
 -->
 
 ---
@@ -209,23 +209,30 @@ Key files:
 
 ## Architecture Decisions
 
-### Dependency Injection (FastAPI)
+### In-Memory File Processing
 
 ```python
-# dependencies.py — the provider
-def get_analysis_service() -> AnalysisService:
-    return AnalysisService(data_dir=Path(settings.data_directory))
+# Router reads file once into bytes
+content = await file.read()
 
-# router — declares what it needs, never knows WHERE data lives
-@router.post("/analyze")
-async def analyze(service = Depends(get_analysis_service)):
-    ...
+# Core receives bytes directly — no temp files
+def run_isotropic_analysis(params, file_content: bytes):
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
+    # ... physics pipeline ...
 
-# tests — swap in a different provider, zero router changes
-app.dependency_overrides[get_analysis_service] = lambda: AnalysisService(
-    data_dir=Path("tests/fixtures")
-)
+# load_data wraps bytes in BytesIO for numpy
+def load_data(content: bytes):
+    data = np.loadtxt(BytesIO(content))
+    # ... validation + return arrays ...
 ```
+
+<!--
+Why in-memory instead of temp files?
+- Our data files are small (a few hundred rows, <500KB). Writing to disk and reading back adds unnecessary I/O for zero benefit.
+- Eliminates an entire class of bugs: orphaned temp files on crash, cleanup race conditions, disk permission errors, missing directories.
+- Removed the service layer, DI, and ~50 lines of temp file management code. The pipeline is now: upload → bytes → BytesIO → numpy. Simpler to understand, fewer things to break.
+- np.loadtxt accepts any file-like object (not just file paths), so BytesIO(bytes) works as a drop-in replacement.
+-->
 
 ---
 

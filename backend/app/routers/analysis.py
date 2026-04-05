@@ -16,7 +16,6 @@ a JSON string in a form field, and the file is a separate form field.
 
 ## FastAPI imports used:
 - APIRouter: groups related endpoints under a prefix (/fdpbd) and tag
-- Depends(): dependency injection — see dependencies.py
 - File(...) / UploadFile: handles multipart file upload, provides .read()
 - Form(...): extracts a form field value (the JSON params string)
 - HTTPException: returns an error response with a status code and detail message
@@ -42,23 +41,22 @@ This lets the async generator yield SSE events as they arrive from the thread.
 import asyncio
 import json
 import logging
-import tempfile
 import traceback
 from collections.abc import AsyncGenerator
 from dataclasses import asdict
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
-from app.config import settings
+from app.core.anisotropic.analysis import run_anisotropic_analysis
+from app.core.isotropic.analysis import run_isotropic_analysis
 from app.core.shared.fitting_de import (
     ProgressEvent,
     run_anisotropic_fit,
     run_transverse_fit,
 )
-from app.dependencies import get_analysis_service
+from app.core.transverse.analysis import run_transverse_analysis
 from app.models.anisotropic import AnisotropicParams, AnisotropicResult
 from app.models.fitting import AnisotropicFitParams, TransverseFitParams
 from app.models.isotropic import IsotropicParams, IsotropicResult
@@ -66,7 +64,6 @@ from app.models.transverse_isotropic import (
     TransverseParams,
     TransverseResult,
 )
-from app.services.analysis_service import AnalysisService
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +100,6 @@ def _parse_params(params_str: str) -> dict[str, Any]:
 async def analyze_isotropic(
     params: str = Form(...),  # JSON string from multipart form
     file: UploadFile = File(...),  # the .txt data file
-    service: AnalysisService = Depends(get_analysis_service),  # DI
 ) -> IsotropicResult:
     """Run isotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
@@ -127,7 +123,7 @@ async def analyze_isotropic(
     # Read the entire file into memory (small .txt files, <1MB typically)
     content = await file.read()
     try:
-        return service.run_isotropic(validated_params, content)
+        return run_isotropic_analysis(validated_params, content)
     except ValueError as e:
         # 400 for domain errors (e.g., data file has wrong format)
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -137,7 +133,6 @@ async def analyze_isotropic(
 async def analyze_anisotropic(
     params: str = Form(...),
     file: UploadFile = File(...),
-    service: AnalysisService = Depends(get_analysis_service),
 ) -> AnisotropicResult:
     """Run anisotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
@@ -151,7 +146,7 @@ async def analyze_anisotropic(
 
     content = await file.read()
     try:
-        return service.run_anisotropic(validated_params, content)
+        return run_anisotropic_analysis(validated_params, content)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -160,7 +155,6 @@ async def analyze_anisotropic(
 async def analyze_transverse(
     params: str = Form(...),
     file: UploadFile = File(...),
-    service: AnalysisService = Depends(get_analysis_service),
 ) -> TransverseResult:
     """Run transverse isotropic FD-PBD analysis with uploaded data file."""
     params_dict = _parse_params(params)
@@ -174,7 +168,7 @@ async def analyze_transverse(
 
     content = await file.read()
     try:
-        return service.run_transverse_isotropic(validated_params, content)
+        return run_transverse_analysis(validated_params, content)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -217,16 +211,6 @@ async def _run_fit_sse(
     you can't call queue.put() directly from a non-async thread. This method
     schedules the put on the event loop's thread safely.
     """
-    # Save uploaded file to disk (DE fitting reads from file path)
-    data_dir = Path(settings.data_directory)
-    data_dir.mkdir(parents=True, exist_ok=True)
-
-    with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".txt", dir=str(data_dir)
-    ) as tmp:
-        tmp.write(file_content)
-        tmp_path = tmp.name
-
     loop = asyncio.get_event_loop()
     queue: asyncio.Queue[ProgressEvent | None] = asyncio.Queue()
 
@@ -241,7 +225,7 @@ async def _run_fit_sse(
         (which would freeze SSE streaming and all other async handlers).
         """
         return await asyncio.to_thread(
-            fit_func, validated_params, tmp_path, on_progress
+            fit_func, validated_params, file_content, on_progress
         )
 
     # Start the fit as a background task
@@ -273,9 +257,6 @@ async def _run_fit_sse(
         # Send error as SSE event (not HTTP error — the stream is already open)
         logger.error("Fitting error:\n%s", traceback.format_exc())
         yield _sse_event("error", json.dumps({"detail": str(e)}))
-    finally:
-        # Clean up temp file regardless of success/failure
-        Path(tmp_path).unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------

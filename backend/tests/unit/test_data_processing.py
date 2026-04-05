@@ -1,24 +1,22 @@
 """Tests for shared data processing functions."""
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 
 from app.core.shared.data_processing import calculate_leaking, correct_data, load_data
 
 
-def test_load_data(sample_data_path: Path) -> None:
+def test_load_data(sample_data_bytes: bytes) -> None:
     """load_data returns 5 arrays with correct shapes."""
-    v_out, v_in, v_ratio, v_sum, freq = load_data(sample_data_path)
+    v_out, v_in, v_ratio, v_sum, freq = load_data(sample_data_bytes)
     assert len(v_out) == len(v_in) == len(freq) == len(v_sum) == len(v_ratio)
     assert len(freq) == 50
 
 
-def test_load_data_file_not_found() -> None:
-    """load_data raises FileNotFoundError for missing files."""
-    with pytest.raises(FileNotFoundError):
-        load_data(Path("/nonexistent/file.txt"))
+def test_load_data_invalid_bytes() -> None:
+    """load_data raises ValueError for non-numeric content."""
+    with pytest.raises(ValueError):
+        load_data(b"not numeric data\nfoo bar baz")
 
 
 def test_calculate_leaking_dc_limit() -> None:

@@ -7,7 +7,7 @@ lib/validation.ts — but while the frontend does quick client-side checks
 numpy and applies physics-based corrections to the raw measurements.
 
 ## Pipeline:
-1. load_data() — reads the .txt file, validates shape, returns 5 arrays
+1. load_data() — parses raw bytes in-memory, validates shape, returns 5 arrays
 2. calculate_leaking() — computes the complex correction factor from
    electronics parameters (lock-in amplifier response)
 3. correct_data() — divides raw signals by the leaking factor to remove
@@ -27,14 +27,14 @@ numpy and applies physics-based corrections to the raw measurements.
   runtime it's just a regular numpy array.
 """
 
-from pathlib import Path
+from io import BytesIO
 
 import numpy as np
 from numpy.typing import NDArray
 
 
 def load_data(
-    filepath: Path,
+    content: bytes,
 ) -> tuple[
     NDArray[np.float64],  # v_out
     NDArray[np.float64],  # v_in
@@ -43,25 +43,25 @@ def load_data(
     NDArray[np.float64],  # freq
 ]:
     """
-    Load experimental data from a whitespace-delimited text file.
+    Load experimental data from raw bytes (in-memory).
 
     Expected format: 4 columns per row (V_in, V_out, Frequency, V_sum),
     at least 2 rows. This matches what the frontend's FileUpload component
     validates before sending.
+
+    The bytes come from FastAPI's UploadFile.read() and are wrapped in a
+    BytesIO buffer for numpy to parse. No temp files are written to disk.
 
     Validation layers (defense in depth):
     1. Frontend: validateDataFile() checks column count, row count, numeric values
     2. Here: np.loadtxt fails on non-numeric, shape checks catch wrong dimensions
     Both exist because the frontend validation can be bypassed (curl, Postman, etc.)
     """
-    if not filepath.exists():
-        raise FileNotFoundError(f"Data file {filepath} not found.")
-
     try:
         # np.loadtxt reads whitespace-delimited text into a 2D float64 array.
-        # It handles spaces, tabs, and mixed whitespace automatically.
+        # BytesIO wraps the raw bytes so numpy can read them like a file.
         # Raises ValueError if any cell isn't a valid number.
-        data: NDArray[np.float64] = np.loadtxt(filepath)
+        data: NDArray[np.float64] = np.loadtxt(BytesIO(content))
     except ValueError as e:
         raise ValueError(
             f"Could not parse data file: {e}. "

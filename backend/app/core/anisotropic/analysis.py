@@ -37,7 +37,6 @@ components × 2 boundary conditions each = 6 unknowns), then assembled into a
 
 import time
 from multiprocessing import Pool, cpu_count
-from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
@@ -669,7 +668,7 @@ def compute_lockin_signals(
 
 
 def run_anisotropic_analysis(
-    params: AnisotropicParams, data_filepath: Path
+    params: AnisotropicParams, file_content: bytes
 ) -> AnisotropicResult:
     """
     Run the full anisotropic analysis pipeline.
@@ -735,7 +734,7 @@ def run_anisotropic_analysis(
     }
 
     # --- Load and correct experimental data (same as isotropic) ---
-    v_out, v_in, _, v_sum, freq = load_data(data_filepath)
+    v_out, v_in, _, v_sum, freq = load_data(file_content)
     complex_leaking = calculate_leaking(
         freq, params.f_rolloff, params.delay_1, params.delay_2
     )
