@@ -57,7 +57,11 @@ export function ResultsSummary({ result, timeTaken }: ResultsSummaryProps) {
           />
           <ResultItem
             label="Ratio at Peak"
-            value={result.data.ratio_at_peak != null ? result.data.ratio_at_peak.toFixed(4) : "N/A"}
+            value={
+              result.data.ratio_at_peak != null
+                ? result.data.ratio_at_peak.toFixed(4)
+                : "N/A"
+            }
           />
         </div>
       )}

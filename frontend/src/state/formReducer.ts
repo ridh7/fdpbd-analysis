@@ -51,6 +51,9 @@ import type {
 import type { LensOption, MediumOption, LaserOption } from "../constants/presets";
 import type { AnalysisMode } from "../constants/defaults";
 import {
+  INITIAL_LENS,
+  INITIAL_MEDIUM,
+  INITIAL_LASER,
   ISOTROPIC_DEFAULTS,
   ANISOTROPIC_DEFAULTS,
   TRANSVERSE_ANISO_DEFAULTS,
@@ -101,9 +104,9 @@ export const initialFormState: FormState = {
   anisotropicParams: ANISOTROPIC_DEFAULTS,
   transverseParams: TRANSVERSE_EXTRA_DEFAULTS,
   file: null,
-  lensOption: "5x",
-  mediumOption: "air",
-  laserOption: "TOPS 1",
+  lensOption: INITIAL_LENS,
+  mediumOption: INITIAL_MEDIUM,
+  laserOption: INITIAL_LASER,
   collapsedSections: new Set<string>(),
 };
 
@@ -135,18 +138,20 @@ function detectPresetChange(
   // (LENS_FIELDS as readonly string[])  — cast needed because .includes() expects
   //   string, but LENS_FIELDS is readonly ["w_rms", ...] (narrower literal types)
   if ((LENS_FIELDS as readonly string[]).includes(field)) {
-    const matchingPreset = (
+    const matchingPreset =
       // Object.entries(LENS_PRESETS) returns [string, unknown][] by default —
       // the `as` cast tells TypeScript each entry is a tuple of:
       //   [0]: preset name, e.g. "5x" | "10x" | "20x" (Exclude removes "custom")
       //   [1]: the preset's field values, e.g. { w_rms: "3.5", ... }
-      Object.entries(LENS_PRESETS) as [
-        Exclude<LensOption, "custom">,  // "5x" | "10x" | "20x" (without "custom")
-        Record<string, string>,         // { fieldName: fieldValue }
-      ][]
-    // ([, preset]) — destructuring: skip index [0] (name), grab index [1] (values)
-    // .every() — returns true only if ALL lens fields match the preset
-    ).find(([, preset]) => LENS_FIELDS.every((f) => newParams[f] === preset[f]));
+      (
+        Object.entries(LENS_PRESETS) as [
+          Exclude<LensOption, "custom">, // "5x" | "10x" | "20x" (without "custom")
+          Record<string, string>, // { fieldName: fieldValue }
+        ][]
+      )
+        // ([, preset]) — destructuring: skip index [0] (name), grab index [1] (values)
+        // .every() — returns true only if ALL lens fields match the preset
+        .find(([, preset]) => LENS_FIELDS.every((f) => newParams[f] === preset[f]));
     // matchingPreset is [name, values] or undefined
     // matchingPreset[0] is the preset name (e.g. "10x"); fallback to "custom"
     result.lensOption = matchingPreset ? matchingPreset[0] : "custom";

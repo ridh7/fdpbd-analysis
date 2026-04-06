@@ -50,11 +50,7 @@ export async function analyzeAnisotropic(
   params: Record<string, unknown>,
   file: File,
 ): Promise<AnisotropicResult> {
-  const raw = await postMultipart<unknown>(
-    "/fdpbd/analyze_anisotropy",
-    params,
-    file,
-  );
+  const raw = await postMultipart<unknown>("/fdpbd/analyze_anisotropy", params, file);
   return AnisotropicResultSchema.parse(raw);
 }
 
@@ -65,10 +61,6 @@ export async function analyzeTransverse(
   params: Record<string, unknown>,
   file: File,
 ): Promise<TransverseResult> {
-  const raw = await postMultipart<unknown>(
-    "/fdpbd/analyze_transverse",
-    params,
-    file,
-  );
+  const raw = await postMultipart<unknown>("/fdpbd/analyze_transverse", params, file);
   return TransverseResultSchema.parse(raw);
 }

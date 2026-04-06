@@ -96,6 +96,7 @@ export async function* streamFit(
         let eventType = "";
         let eventData = "";
 
+        // slice(7) skips "event: " (7 chars). slice(6) skips "data: " (6 chars).
         for (const line of part.split("\n")) {
           if (line.startsWith("event: ")) {
             eventType = line.slice(7);

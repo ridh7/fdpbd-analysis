@@ -50,12 +50,25 @@ import type {
   IsotropicParams,
   AnisotropicExtra,
   TransverseExtra,
+  FitConfigState,
 } from "../schemas/params";
-import type { FitConfigState } from "../constants/defaults";
+import type { FittableParam } from "../constants/defaults";
 import {
   buildAnisotropicPayload,
   buildTransversePayload,
 } from "../lib/unitConversions";
+
+/** Build a FitConfigState from a FittableParam's defaults. */
+export function buildFitConfig(param: FittableParam): FitConfigState {
+  return {
+    parameterToFit: param.key,
+    boundsMin: param.defaultMin,
+    boundsMax: param.defaultMax,
+    maxIterations: param.defaultMaxIter,
+    populationSize: param.defaultPopSize,
+    tolerance: param.defaultTolerance,
+  };
+}
 
 export interface FittingState {
   isFitting: boolean;

@@ -55,16 +55,13 @@ import { ActionBar } from "./components/form/ActionBar";
 import { ResultsSummary } from "./components/results/ResultsSummary";
 import { PlotPanel } from "./components/results/PlotPanel";
 import { FittingProgress } from "./components/results/FittingProgress";
-import {
-  ANISO_FITTABLE_PARAMS,
-  TRANS_FITTABLE_PARAMS,
-  DEFAULT_FIT_CONFIG,
-} from "./constants/defaults";
-import type { FitConfigState } from "./constants/defaults";
+import { ANISO_FITTABLE_PARAMS, TRANS_FITTABLE_PARAMS } from "./constants/defaults";
+import { buildFitConfig } from "./hooks/useFitting";
 import type {
   IsotropicParams,
   AnisotropicExtra,
   TransverseExtra,
+  FitConfigState,
 } from "./schemas/params";
 
 function App() {
@@ -73,7 +70,9 @@ function App() {
   const fitting = useFitting();
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<WorkflowTab>("forward");
-  const [fitConfig, setFitConfig] = useState<FitConfigState>(DEFAULT_FIT_CONFIG);
+  const [fitConfig, setFitConfig] = useState<FitConfigState>(
+    buildFitConfig(ANISO_FITTABLE_PARAMS[0]),
+  );
 
   const fittingEnabled =
     form.analysisMode === "anisotropic" || form.analysisMode === "transverse_isotropic";
@@ -88,18 +87,8 @@ function App() {
     if (!fittingEnabled) {
       setActiveTab("forward");
     }
-    const params =
-      form.analysisMode === "transverse_isotropic"
-        ? TRANS_FITTABLE_PARAMS
-        : ANISO_FITTABLE_PARAMS;
-    const firstParam = params[0];
-    setFitConfig({
-      ...DEFAULT_FIT_CONFIG,
-      parameterToFit: firstParam.key,
-      boundsMin: firstParam.defaultMin,
-      boundsMax: firstParam.defaultMax,
-    });
-  }, [form.analysisMode, fittingEnabled]);
+    setFitConfig(buildFitConfig(fittableParams[0]));
+  }, [form.analysisMode, fittingEnabled, fittableParams]);
 
   const handleFitConfigChange = (field: keyof FitConfigState, value: string) => {
     setFitConfig((prev) => ({ ...prev, [field]: value }));
@@ -183,17 +172,7 @@ function App() {
 
   const handleReset = () => {
     dispatch({ type: "RESET" });
-    const params =
-      form.analysisMode === "transverse_isotropic"
-        ? TRANS_FITTABLE_PARAMS
-        : ANISO_FITTABLE_PARAMS;
-    const firstParam = params[0];
-    setFitConfig({
-      ...DEFAULT_FIT_CONFIG,
-      parameterToFit: firstParam.key,
-      boundsMin: firstParam.defaultMin,
-      boundsMax: firstParam.defaultMax,
-    });
+    setFitConfig(buildFitConfig(fittableParams[0]));
     analysis.reset();
     fitting.resetFit();
   };

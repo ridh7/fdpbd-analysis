@@ -1,52 +1,58 @@
 /**
  * Default parameter values for all three FDPBD analysis modes.
  *
+ * Hardware-related fields (lens, laser, medium) are derived from presets
+ * so there's a single source of truth — changing a preset value automatically
+ * updates the initial form state.
+ *
  * Values are stored as strings (not numbers) because they feed directly
- * into form inputs, which work with string state. This avoids repeated
- * number-to-string conversions and preserves user-entered formatting
- * (e.g., scientific notation like "1.3e-11").
+ * into form inputs, which work with string state.
  *
  * Also defines the DE (Differential Evolution) fitting configuration:
  * which parameters are fittable, their search bounds, and solver settings.
  *
- * Consumed by: useParameterForm hook, FitConfigPanel, and mode-switching logic.
+ * Consumed by: formReducer, FitConfigPanel, and mode-switching logic.
  */
 import type {
   IsotropicParams,
   AnisotropicExtra,
   TransverseExtra,
 } from "../schemas/params";
+import { LENS_PRESETS, MEDIUM_PRESETS, LASER_PRESETS } from "./presets";
+import type { LensOption, MediumOption, LaserOption } from "./presets";
 
 /** The three thermal analysis modes supported by the FDPBD solver. */
 export type AnalysisMode = "isotropic" | "anisotropic" | "transverse_isotropic";
 
+/** Which hardware preset is selected by default for each group. */
+export const INITIAL_LENS: Exclude<LensOption, "custom"> = "5x";
+export const INITIAL_MEDIUM: Exclude<MediumOption, "custom"> = "air";
+export const INITIAL_LASER: Exclude<LaserOption, "custom"> = "TOPS 1";
+
 /**
- * Isotropic mode defaults — based on a typical Al transducer on silicon substrate
- * measured with the 5x lens in air. Array fields represent per-layer values
- * (e.g., lambda_down has 3 layers: transducer, interface, substrate).
+ * Sample and optical defaults — fields NOT covered by any hardware preset.
+ * These describe the sample under test (Al transducer on silicon substrate).
  */
-export const ISOTROPIC_DEFAULTS: IsotropicParams = {
-  f_rolloff: "95000",
-  delay_1: "8.9e-6",
-  delay_2: "-1.3e-11",
-  incident_pump: "1.06",
-  incident_probe: "0.85",
-  w_rms: "11.20",
-  x_offset: "12.60",
-  lens_transmittance: "0.93",
-  detector_factor: "74.0",
+const SAMPLE_DEFAULTS = {
   n_al: "2.9",
   k_al: "8.2",
-  lambda_down: ["149.0", "0.1", "9.7"], // W/m-K per layer: Al, interface, substrate
-  eta_down: ["1.0", "1.0", "1.0"], // all layers isotropic
-  c_down: ["2.44", "0.1", "2.73"], // volumetric heat capacity per layer
-  h_down: ["0.07", "0.001", "1"], // thickness (µm): thin Al film, interface, thick substrate
+  lambda_down: ["149.0", "0.1", "9.7"] as [string, string, string],
+  eta_down: ["1.0", "1.0", "1.0"] as [string, string, string],
+  c_down: ["2.44", "0.1", "2.73"] as [string, string, string],
+  h_down: ["0.07", "0.001", "1"] as [string, string, string],
   niu: "0.26",
   alpha_t: "1.885e-5",
-  lambda_up: "0.028", // air thermal conductivity
-  eta_up: "1.0",
-  c_up: "1192.0",
-  h_up: "0.001",
+};
+
+/**
+ * Isotropic mode defaults — composed from hardware presets + sample defaults.
+ * No values are duplicated: lens, laser, and medium fields come from presets.
+ */
+export const ISOTROPIC_DEFAULTS: IsotropicParams = {
+  ...LENS_PRESETS[INITIAL_LENS],
+  ...MEDIUM_PRESETS[INITIAL_MEDIUM],
+  ...LASER_PRESETS[INITIAL_LASER],
+  ...SAMPLE_DEFAULTS,
 };
 
 /**
@@ -110,67 +116,104 @@ export const TRANSVERSE_EXTRA_DEFAULTS: TransverseExtra = {
 // DE (Differential Evolution) fitting configuration
 // ---------------------------------------------------------------------------
 
-/** Describes a parameter that can be selected for DE curve fitting. */
+/** Describes a parameter that can be selected for DE curve fitting,
+ *  including its own solver defaults. Each parameter may need different
+ *  solver settings — e.g., conductivities converge faster than CTEs. */
 export interface FittableParam {
-  key: string; // backend parameter key sent to the solver
-  label: string; // human-readable label shown in the UI
-  defaultMin: string; // lower search bound (string for form compatibility)
-  defaultMax: string; // upper search bound
+  key: string;
+  label: string;
+  defaultMin: string;
+  defaultMax: string;
+  defaultMaxIter: string;
+  defaultPopSize: string;
+  defaultTolerance: string;
 }
 
-/** Fittable parameters in full anisotropic mode (3 conductivities + 2 CTEs). */
+/** Fittable parameters for full anisotropic mode. */
 export const ANISO_FITTABLE_PARAMS: FittableParam[] = [
-  { key: "sigma_x", label: "sigma_x (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
-  { key: "sigma_y", label: "sigma_y (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
-  { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  {
+    key: "sigma_x",
+    label: "sigma_x (W/m-K)",
+    defaultMin: "0.01",
+    defaultMax: "2.0",
+    defaultMaxIter: "20",
+    defaultPopSize: "8",
+    defaultTolerance: "1e-3",
+  },
+  {
+    key: "sigma_y",
+    label: "sigma_y (W/m-K)",
+    defaultMin: "0.01",
+    defaultMax: "2.0",
+    defaultMaxIter: "20",
+    defaultPopSize: "8",
+    defaultTolerance: "1e-3",
+  },
+  {
+    key: "sigma_z",
+    label: "sigma_z (W/m-K)",
+    defaultMin: "0.01",
+    defaultMax: "2.0",
+    defaultMaxIter: "20",
+    defaultPopSize: "8",
+    defaultTolerance: "1e-3",
+  },
   {
     key: "alphaT_perp",
     label: "CTE perp (1/K)",
     defaultMin: "1e-6",
     defaultMax: "200e-6",
+    defaultMaxIter: "25",
+    defaultPopSize: "10",
+    defaultTolerance: "1e-3",
   },
   {
     key: "alphaT_para",
     label: "CTE para (1/K)",
     defaultMin: "1e-6",
     defaultMax: "200e-6",
+    defaultMaxIter: "25",
+    defaultPopSize: "10",
+    defaultTolerance: "1e-3",
   },
 ];
 
-/** Fittable parameters in transverse isotropic mode (2 conductivities + 2 CTEs). */
+/** Fittable parameters for transverse isotropic mode. */
 export const TRANS_FITTABLE_PARAMS: FittableParam[] = [
-  { key: "sigma_r", label: "sigma_r (W/m-K)", defaultMin: "0.01", defaultMax: "3.0" },
-  { key: "sigma_z", label: "sigma_z (W/m-K)", defaultMin: "0.01", defaultMax: "2.0" },
+  {
+    key: "sigma_r",
+    label: "sigma_r (W/m-K)",
+    defaultMin: "0.01",
+    defaultMax: "3.0",
+    defaultMaxIter: "30",
+    defaultPopSize: "15",
+    defaultTolerance: "1e-3",
+  },
+  {
+    key: "sigma_z",
+    label: "sigma_z (W/m-K)",
+    defaultMin: "0.01",
+    defaultMax: "2.0",
+    defaultMaxIter: "30",
+    defaultPopSize: "15",
+    defaultTolerance: "1e-3",
+  },
   {
     key: "alphaT_perp",
     label: "CTE perp (1/K)",
     defaultMin: "1e-6",
     defaultMax: "200e-6",
+    defaultMaxIter: "35",
+    defaultPopSize: "15",
+    defaultTolerance: "1e-3",
   },
   {
     key: "alphaT_para",
     label: "CTE para (1/K)",
     defaultMin: "1e-6",
     defaultMax: "200e-6",
+    defaultMaxIter: "35",
+    defaultPopSize: "15",
+    defaultTolerance: "1e-3",
   },
 ];
-
-/** UI state for the DE fitting controls — all strings for form input binding. */
-export interface FitConfigState {
-  parameterToFit: string;
-  boundsMin: string;
-  boundsMax: string;
-  maxIterations: string; // DE solver max generations
-  populationSize: string; // DE population (higher = more exploration, slower)
-  tolerance: string; // convergence threshold for early stopping
-}
-
-/** Sensible starting configuration for DE fitting. */
-export const DEFAULT_FIT_CONFIG: FitConfigState = {
-  parameterToFit: "sigma_x",
-  boundsMin: "0.01",
-  boundsMax: "2.0",
-  maxIterations: "20",
-  populationSize: "8", // kept small for interactive use; increase for precision
-  tolerance: "1e-3",
-};

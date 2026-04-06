@@ -9,7 +9,8 @@
  * All values are strings for form input compatibility — parsed to numbers
  * in useFitting before sending to the backend.
  */
-import type { FitConfigState, FittableParam } from "../../constants/defaults";
+import type { FitConfigState } from "../../schemas/params";
+import type { FittableParam } from "../../constants/defaults";
 
 interface FitConfigFormProps {
   config: FitConfigState;
@@ -43,6 +44,9 @@ export function FitConfigForm({
             if (param) {
               onChange("boundsMin", param.defaultMin);
               onChange("boundsMax", param.defaultMax);
+              onChange("maxIterations", param.defaultMaxIter);
+              onChange("populationSize", param.defaultPopSize);
+              onChange("tolerance", param.defaultTolerance);
             }
           }}
           disabled={disabled}

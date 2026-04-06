@@ -38,17 +38,17 @@ import { z } from "zod/v4";
  */
 export const IsotropicParamsSchema = z.object({
   // -- Laser / electronics --
-  f_rolloff: z.string().min(1),   // detector rolloff frequency (MHz)
-  delay_1: z.string().min(1),     // electronic delay channel 1 (ns)
-  delay_2: z.string().min(1),     // electronic delay channel 2 (ns)
-  incident_pump: z.string().min(1),  // incident pump power (mW)
+  f_rolloff: z.string().min(1), // detector rolloff frequency (MHz)
+  delay_1: z.string().min(1), // electronic delay channel 1 (ns)
+  delay_2: z.string().min(1), // electronic delay channel 2 (ns)
+  incident_pump: z.string().min(1), // incident pump power (mW)
   incident_probe: z.string().min(1), // incident probe power (mW)
 
   // -- Lens / optics --
-  w_rms: z.string().min(1),            // RMS beam spot size (um)
-  x_offset: z.string().min(1),         // probe offset distance (um)
+  w_rms: z.string().min(1), // RMS beam spot size (um)
+  x_offset: z.string().min(1), // probe offset distance (um)
   lens_transmittance: z.string().min(1), // lens transmittance factor (dimensionless)
-  detector_factor: z.string().min(1),    // detector calibration factor (dimensionless)
+  detector_factor: z.string().min(1), // detector calibration factor (dimensionless)
 
   // -- Transducer optical constants (Layer 1, typically aluminum) --
   n_al: z.string().min(1), // real part of refractive index
@@ -58,19 +58,19 @@ export const IsotropicParamsSchema = z.object({
   // Each property is a 3-tuple: [transducer, interface, substrate].
   // This models the thin-film stack that the thermal wave propagates through.
   lambda_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]), // thermal conductivity per layer (W/m-K)
-  eta_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]),    // density per layer (g/cm3)
-  c_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]),      // heat capacity per layer (J/cm3-K)
-  h_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]),      // thickness per layer (nm)
+  eta_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]), // density per layer (g/cm3)
+  c_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]), // heat capacity per layer (J/cm3-K)
+  h_down: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]), // thickness per layer (nm)
 
   // -- Substrate bulk properties --
-  niu: z.string().min(1),     // Poisson's ratio (dimensionless)
+  niu: z.string().min(1), // Poisson's ratio (dimensionless)
   alpha_t: z.string().min(1), // coefficient of thermal expansion (1/K)
 
   // -- Medium above sample (typically air or vacuum) --
   lambda_up: z.string().min(1), // thermal conductivity (W/m-K)
-  eta_up: z.string().min(1),    // density (g/cm3)
-  c_up: z.string().min(1),      // heat capacity (J/cm3-K)
-  h_up: z.string().min(1),      // effective thickness (um)
+  eta_up: z.string().min(1), // density (g/cm3)
+  c_up: z.string().min(1), // heat capacity (J/cm3-K)
+  h_up: z.string().min(1), // effective thickness (um)
 });
 
 // Inferred type used throughout the app for form state, default values, etc.
@@ -94,11 +94,11 @@ export const AnisotropicExtraSchema = z.object({
   phi: z.string().min(1), // crystal rotation angle (degrees)
 
   // -- Transducer elastic / thermal properties --
-  rho: z.string().min(1),    // density (g/cm3)
+  rho: z.string().min(1), // density (g/cm3)
   alphaT: z.string().min(1), // coefficient of thermal expansion (1/K)
-  C11_0: z.string().min(1),  // elastic stiffness C11 (GPa) -- Voigt notation
-  C12_0: z.string().min(1),  // elastic stiffness C12 (GPa)
-  C44_0: z.string().min(1),  // elastic stiffness C44 (GPa)
+  C11_0: z.string().min(1), // elastic stiffness C11 (GPa) -- Voigt notation
+  C12_0: z.string().min(1), // elastic stiffness C12 (GPa)
+  C44_0: z.string().min(1), // elastic stiffness C44 (GPa)
 
   // -- Sample direction-dependent thermal conductivities --
   lambda_down_x_sample: z.string().min(1), // in-plane x (W/m-K)
@@ -106,14 +106,14 @@ export const AnisotropicExtraSchema = z.object({
   lambda_down_z_sample: z.string().min(1), // cross-plane  (W/m-K)
 
   // -- Sample elastic / thermal properties --
-  rho_sample: z.string().min(1),      // density (g/cm3)
-  C11_0_sample: z.string().min(1),    // elastic stiffness C11 (GPa)
-  C12_0_sample: z.string().min(1),    // elastic stiffness C12 (GPa)
-  C13_0_sample: z.string().min(1),    // elastic stiffness C13 (GPa)
-  C33_0_sample: z.string().min(1),    // elastic stiffness C33 (GPa)
-  C44_0_sample: z.string().min(1),    // elastic stiffness C44 (GPa)
-  alphaT_perp: z.string().min(1),     // thermal expansion, perpendicular (1/K)
-  alphaT_para: z.string().min(1),     // thermal expansion, parallel (1/K)
+  rho_sample: z.string().min(1), // density (g/cm3)
+  C11_0_sample: z.string().min(1), // elastic stiffness C11 (GPa)
+  C12_0_sample: z.string().min(1), // elastic stiffness C12 (GPa)
+  C13_0_sample: z.string().min(1), // elastic stiffness C13 (GPa)
+  C33_0_sample: z.string().min(1), // elastic stiffness C33 (GPa)
+  C44_0_sample: z.string().min(1), // elastic stiffness C44 (GPa)
+  alphaT_perp: z.string().min(1), // thermal expansion, perpendicular (1/K)
+  alphaT_para: z.string().min(1), // thermal expansion, parallel (1/K)
 });
 
 // Inferred type for anisotropic-specific form fields.
@@ -133,9 +133,19 @@ export type AnisotropicExtra = z.infer<typeof AnisotropicExtraSchema>;
  */
 export const TransverseExtraSchema = z.object({
   v_sum_fixed: z.string().min(1), // fixed sum velocity (m/s)
-  c_probe: z.string().min(1),     // probe beam speed of light in medium (m/s)
-  g_int: z.string().min(1),       // interface thermal conductance (MW/m2-K)
+  c_probe: z.string().min(1), // probe beam speed of light in medium (m/s)
+  g_int: z.string().min(1), // interface thermal conductance (MW/m2-K)
 });
 
 // Inferred type for transverse-isotropic-specific form fields.
 export type TransverseExtra = z.infer<typeof TransverseExtraSchema>;
+
+/** UI state for the DE fitting controls — all strings for form input binding. */
+export interface FitConfigState {
+  parameterToFit: string;
+  boundsMin: string;
+  boundsMax: string;
+  maxIterations: string;
+  populationSize: string;
+  tolerance: string;
+}
